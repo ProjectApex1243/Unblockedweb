@@ -780,6 +780,48 @@
                 font-size: 14px;
             }
         }
+
+        /* Save Notification */
+        .save-notification {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: linear-gradient(135deg, #00ff00, #00cc00);
+            color: #000;
+            padding: 15px 25px;
+            border-radius: 10px;
+            font-weight: bold;
+            box-shadow: 0 5px 20px rgba(0, 255, 0, 0.5);
+            display: none;
+            z-index: 10000;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        .save-notification.show {
+            display: block;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes slideOut {
+            from {
+                transform: translateX(0);
+                opacity: 1;
+            }
+            to {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+        }
     </style>
 </head>
 <body>
@@ -879,10 +921,11 @@
             <div class="game-controls">
                 <button class="game-btn" id="fullscreenBtn" onclick="toggleFullscreen()">⛶ Fullscreen</button>
                 <button class="game-btn" onclick="reloadGame()">🔄 Reload</button>
+                <button class="game-btn" id="saveBtn" onclick="saveGameState()">💾 Save</button>
                 <button class="game-btn" onclick="closeGame()">✖ Close</button>
             </div>
         </div>
-        <iframe id="game-frame" allowfullscreen webkitallowfullscreen mozallowfullscreen></iframe>
+        <iframe id="game-frame" sandbox="allow-scripts allow-same-origin allow-forms allow-pointer-lock allow-popups allow-modals allow-downloads" allowfullscreen webkitallowfullscreen mozallowfullscreen></iframe>
     </div>
 
     <!-- Game Loader -->
@@ -6154,6 +6197,208 @@ const COVER_URL = `https://cdn.jsdelivr.net/gh/${GITHUB_USER}/${COVER_REPO}@mast
         }
     }
 
+    // ===== GAME STORAGE PERSISTENCE SYSTEM =====
+    // This system saves game data automatically so player progress isn't lost
+    
+    const STORAGE_PREFIX = 'game_data_';
+    const AUTO_SAVE_INTERVAL = 30000; // Auto-save every 30 seconds
+    let autoSaveTimer = null;
+    
+    // Storage bridge code to inject into games
+    const storageInjectionCode = '<script>' + 
+    '(function() {' +
+        'const gameKey = window.location.pathname + "_" + window.location.search;' +
+        'const storageKey = "game_save_" + btoa(gameKey).replace(/=/g, "");' +
+        '' +
+        '// Load saved data on page load' +
+        'const savedData = localStorage.getItem(storageKey);' +
+        'if (savedData) {' +
+            'try {' +
+                'const parsed = JSON.parse(savedData);' +
+                'Object.keys(parsed).forEach(function(key) {' +
+                    'if (key !== storageKey) {' +
+                        'localStorage.setItem(key, parsed[key]);' +
+                    '}' +
+                '});' +
+                'console.log("[Storage Bridge] Game data restored");' +
+            '} catch (e) {' +
+                'console.warn("[Storage Bridge] Failed to restore data:", e);' +
+            '}' +
+        '}' +
+        '' +
+        '// Override localStorage.setItem to auto-save' +
+        'const originalSetItem = localStorage.setItem;' +
+        'localStorage.setItem = function(key, value) {' +
+            'originalSetItem.call(localStorage, key, value);' +
+            'const allData = {};' +
+            'for (let i = 0; i < localStorage.length; i++) {' +
+                'const k = localStorage.key(i);' +
+                'if (k && !k.startsWith("game_save_")) {' +
+                    'allData[k] = localStorage.getItem(k);' +
+                '}' +
+            '}' +
+            'originalSetItem.call(localStorage, storageKey, JSON.stringify(allData));' +
+        '};' +
+        '' +
+        '// Also handle sessionStorage' +
+        'const sessionKey = "game_session_" + btoa(gameKey).replace(/=/g, "");' +
+        'const savedSession = sessionStorage.getItem(sessionKey);' +
+        'if (savedSession) {' +
+            'try {' +
+                'const parsed = JSON.parse(savedSession);' +
+                'Object.keys(parsed).forEach(function(key) {' +
+                    'if (key !== sessionKey) {' +
+                        'sessionStorage.setItem(key, parsed[key]);' +
+                    '}' +
+                '});' +
+            '} catch (e) {}' +
+        '}' +
+        '' +
+        'const originalSessionSetItem = sessionStorage.setItem;' +
+        'sessionStorage.setItem = function(key, value) {' +
+            'originalSessionSetItem.call(sessionStorage, key, value);' +
+            'const allData = {};' +
+            'for (let i = 0; i < sessionStorage.length; i++) {' +
+                'const k = sessionStorage.key(i);' +
+                'if (k && !k.startsWith("game_session_")) {' +
+                    'allData[k] = sessionStorage.getItem(k);' +
+                '}' +
+            '}' +
+            'originalSessionSetItem.call(sessionStorage, sessionKey, JSON.stringify(allData));' +
+        '};' +
+        '' +
+        '// Periodic auto-save' +
+        'setInterval(function() {' +
+            'const allData = {};' +
+            'for (let i = 0; i < localStorage.length; i++) {' +
+                'const k = localStorage.key(i);' +
+                'if (k && !k.startsWith("game_save_")) {' +
+                    'allData[k] = localStorage.getItem(k);' +
+                '}' +
+            '}' +
+            'if (Object.keys(allData).length > 0) {' +
+                'localStorage.setItem(storageKey, JSON.stringify(allData));' +
+            '}' +
+        '}, 5000);' +
+        '' +
+        'console.log("[Storage Bridge] Initialized for game");' +
+    '})();' +
+    '</' + 'script>';
+    
+    // Show save notification
+    function showSaveNotification(message = '💾 Game Progress Saved!', isAuto = false) {
+        const notification = document.getElementById('saveNotification');
+        notification.textContent = message;
+        notification.classList.add('show');
+        
+        setTimeout(() => {
+            notification.style.animation = 'slideOut 0.3s ease-out';
+            setTimeout(() => {
+                notification.classList.remove('show');
+                notification.style.animation = '';
+            }, 300);
+        }, isAuto ? 2000 : 3000);
+    }
+    
+    // Save game state manually
+    function saveGameState() {
+        const frame = document.getElementById('game-frame');
+        if (!frame || !frame.contentWindow) {
+            alert('No game is currently loaded');
+            return;
+        }
+        
+        try {
+            // Trigger a manual save in the iframe
+            const frameWindow = frame.contentWindow;
+            const gameKey = frameWindow.location.pathname + '_' + frameWindow.location.search;
+            const storageKey = 'game_save_' + btoa(gameKey).replace(/=/g, '');
+            
+            // Collect all localStorage data from the iframe
+            const allData = {};
+            const frameStorage = frameWindow.localStorage;
+            for (let i = 0; i < frameStorage.length; i++) {
+                const key = frameStorage.key(i);
+                if (key && !key.startsWith('game_save_')) {
+                    allData[key] = frameStorage.getItem(key);
+                }
+            }
+            
+            if (Object.keys(allData).length > 0) {
+                frameStorage.setItem(storageKey, JSON.stringify(allData));
+                
+                // Also save to parent window's localStorage as backup
+                const backupKey = STORAGE_PREFIX + currentGame.filename;
+                localStorage.setItem(backupKey, JSON.stringify(allData));
+                
+                // Show save button feedback
+                const saveBtn = document.getElementById('saveBtn');
+                const originalText = saveBtn.textContent;
+                saveBtn.textContent = '✓ Saved!';
+                saveBtn.style.background = '#00ff00';
+                setTimeout(() => {
+                    saveBtn.textContent = originalText;
+                    saveBtn.style.background = '';
+                }, 2000);
+                
+                // Show notification
+                showSaveNotification('💾 Game Progress Saved!', false);
+                
+                console.log('Game state saved successfully');
+            } else {
+                alert('No game data to save yet. Play the game first!');
+            }
+        } catch (e) {
+            console.error('Save failed:', e);
+            alert('Could not save game data. Make sure the game has started.');
+        }
+    }
+    
+    // Auto-save functionality
+    function startAutoSave() {
+        if (autoSaveTimer) clearInterval(autoSaveTimer);
+        
+        autoSaveTimer = setInterval(() => {
+            const frame = document.getElementById('game-frame');
+            if (frame && frame.contentWindow && currentGame.filename) {
+                try {
+                    // Do the save
+                    const frameWindow = frame.contentWindow;
+                    const gameKey = frameWindow.location.pathname + '_' + frameWindow.location.search;
+                    const storageKey = 'game_save_' + btoa(gameKey).replace(/=/g, '');
+                    
+                    const allData = {};
+                    const frameStorage = frameWindow.localStorage;
+                    for (let i = 0; i < frameStorage.length; i++) {
+                        const key = frameStorage.key(i);
+                        if (key && !key.startsWith('game_save_')) {
+                            allData[key] = frameStorage.getItem(key);
+                        }
+                    }
+                    
+                    if (Object.keys(allData).length > 0) {
+                        frameStorage.setItem(storageKey, JSON.stringify(allData));
+                        const backupKey = STORAGE_PREFIX + currentGame.filename;
+                        localStorage.setItem(backupKey, JSON.stringify(allData));
+                        
+                        // Show auto-save notification
+                        showSaveNotification('💾 Auto-Saved!', true);
+                        console.log('Auto-save completed');
+                    }
+                } catch (e) {
+                    console.log('Auto-save skipped:', e.message);
+                }
+            }
+        }, AUTO_SAVE_INTERVAL);
+    }
+    
+    function stopAutoSave() {
+        if (autoSaveTimer) {
+            clearInterval(autoSaveTimer);
+            autoSaveTimer = null;
+        }
+    }
+
     // Game loading
     async function loadGame(filename, title) {
         currentGame = { filename, title };
@@ -6179,12 +6424,22 @@ const COVER_URL = `https://cdn.jsdelivr.net/gh/${GITHUB_USER}/${COVER_REPO}@mast
                 modifiedHtml = modifiedHtml.replace('<head>', '<head><base href="' + baseUrl + '">');
             }
             
+            // Inject storage persistence code
+            if (modifiedHtml.includes('</head>')) {
+                modifiedHtml = modifiedHtml.replace('</head>', storageInjectionCode + '</head>');
+            } else if (modifiedHtml.includes('<body')) {
+                modifiedHtml = modifiedHtml.replace('<body', storageInjectionCode + '<body');
+            }
+            
             setTimeout(function() {
                 gameTitle.textContent = title;
                 const blob = new Blob([modifiedHtml], { type: 'text/html' });
                 const blobUrl = URL.createObjectURL(blob);
                 frame.src = blobUrl;
-                frame.onload = function() { console.log('Game loaded'); };
+                frame.onload = function() { 
+                    console.log('Game loaded with storage bridge');
+                    startAutoSave(); // Start auto-saving
+                };
                 loader.style.display = 'none';
                 container.style.display = 'flex';
             }, 5000);
@@ -6219,12 +6474,22 @@ const COVER_URL = `https://cdn.jsdelivr.net/gh/${GITHUB_USER}/${COVER_REPO}@mast
                 modifiedHtml = modifiedHtml.replace('<head>', '<head><base href="' + baseUrl + '">');
             }
             
+            // Inject storage persistence code
+            if (modifiedHtml.includes('</head>')) {
+                modifiedHtml = modifiedHtml.replace('</head>', storageInjectionCode + '</head>');
+            } else if (modifiedHtml.includes('<body')) {
+                modifiedHtml = modifiedHtml.replace('<body', storageInjectionCode + '<body');
+            }
+            
             setTimeout(function() {
                 gameTitle.textContent = title;
                 const blob = new Blob([modifiedHtml], { type: 'text/html' });
                 const blobUrl = URL.createObjectURL(blob);
                 frame.src = blobUrl;
-                frame.onload = function() { console.log('Proxy loaded'); };
+                frame.onload = function() { 
+                    console.log('Proxy loaded with storage bridge');
+                    startAutoSave(); // Start auto-saving
+                };
                 loader.style.display = 'none';
                 container.style.display = 'flex';
             }, 5000);
@@ -6297,6 +6562,16 @@ const COVER_URL = `https://cdn.jsdelivr.net/gh/${GITHUB_USER}/${COVER_REPO}@mast
     }
 
     function closeGame() {
+        // Save one last time before closing
+        try {
+            saveGameState();
+        } catch (e) {
+            console.log('Final save skipped:', e.message);
+        }
+        
+        // Stop auto-saving
+        stopAutoSave();
+        
         if (document.fullscreenElement || document.webkitFullscreenElement ||
             document.mozFullScreenElement || document.msFullscreenElement) {
             if (document.exitFullscreen) document.exitFullscreen();
@@ -6367,5 +6642,11 @@ const COVER_URL = `https://cdn.jsdelivr.net/gh/${GITHUB_USER}/${COVER_REPO}@mast
 
     initializeLauncher();
 </script>
+
+<!-- Save Notification -->
+<div id="saveNotification" class="save-notification">
+    💾 Game Progress Auto-Saved!
+</div>
+
 </body>
 </html>
