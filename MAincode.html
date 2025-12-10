@@ -38,6 +38,28 @@
             display: flex;
             min-height: 100vh;
             overflow-x: hidden;
+            position: relative;
+        }
+
+        /* Custom Background */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            opacity: 0;
+            z-index: -2;
+            pointer-events: none;
+            transition: opacity 0.3s;
+        }
+
+        body.has-custom-background::before {
+            opacity: 0.5;
         }
 
         /* Snow Canvas */
@@ -97,23 +119,6 @@
             box-shadow: 0 0 20px rgba(255, 255, 0, 0.5);
         }
 
-        .sidebar-item.locked {
-            background: linear-gradient(145deg, #666, #999);
-            border-color: #999;
-            cursor: not-allowed;
-            opacity: 0.6;
-        }
-
-        .sidebar-item.locked:hover {
-            transform: none;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
-        }
-
-        .lock-icon {
-            margin-left: 5px;
-            font-size: 14px;
-        }
-
         /* Notification Badge */
         .notification-badge {
             position: absolute;
@@ -138,7 +143,7 @@
             50% { transform: scale(1.15); }
         }
 
-        /* Tooltip - Adjusted for top menu */
+        /* Tooltip */
         .tooltip {
             position: absolute;
             left: 50%;
@@ -173,7 +178,7 @@
             opacity: 1;
         }
 
-        /* Main Content Area - Adjusted for top menu */
+        /* Main Content Area */
         .main-wrapper {
             margin-left: 0;
             margin-top: 80px;
@@ -483,33 +488,6 @@
             margin-bottom: 15px;
         }
 
-        /* Proxys Tab */
-        .proxy-list {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-            gap: 20px;
-            padding: 20px 0;
-        }
-
-        .proxy-item {
-            background: linear-gradient(145deg, #220000, var(--cardBg));
-            border: 2px solid var(--accent);
-            border-radius: 15px;
-            padding: 30px;
-            cursor: pointer;
-            transition: all 0.3s;
-            text-align: center;
-            font-size: 18px;
-            font-weight: bold;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
-        }
-
-        .proxy-item:hover {
-            transform: translateY(-10px);
-            box-shadow: 0 0 30px var(--glowColor);
-            border-color: var(--glowColor);
-        }
-
         /* Settings Tab */
         .settings-section {
             background: linear-gradient(145deg, #220000, var(--cardBg));
@@ -580,6 +558,118 @@
         .settings-button:hover {
             background: var(--accentDark);
             box-shadow: 0 0 20px var(--glowColor);
+        }
+
+        /* Custom Background Upload */
+        .background-preview {
+            width: 100%;
+            height: 200px;
+            border: 2px dashed var(--accent);
+            border-radius: 10px;
+            margin: 15px 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .background-preview.has-image {
+            border-style: solid;
+        }
+
+        .background-preview-placeholder {
+            color: var(--muted);
+            text-align: center;
+            padding: 20px;
+        }
+
+        .file-input-wrapper {
+            position: relative;
+            display: inline-block;
+            cursor: pointer;
+            margin: 10px 5px;
+        }
+
+        .file-input-wrapper input[type="file"] {
+            position: absolute;
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .file-input-label {
+            display: inline-block;
+            padding: 12px 25px;
+            background: var(--accent);
+            color: var(--text);
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+
+        .file-input-label:hover {
+            background: var(--accentDark);
+            box-shadow: 0 0 20px var(--glowColor);
+        }
+
+        /* Color Theme Editor */
+        .color-picker-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .color-picker-item {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 15px;
+            border-radius: 10px;
+            border: 2px solid var(--accent);
+        }
+
+        .color-picker-item label {
+            display: block;
+            color: var(--text);
+            font-weight: bold;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        .color-picker-item input[type="color"] {
+            width: 100%;
+            height: 50px;
+            border: 2px solid var(--accent);
+            border-radius: 8px;
+            cursor: pointer;
+            background: transparent;
+        }
+
+        .color-preset-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .preset-button {
+            padding: 10px 20px;
+            background: var(--accent);
+            color: var(--text);
+            border: 2px solid var(--accent);
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+
+        .preset-button:hover {
+            background: var(--accentDark);
+            box-shadow: 0 0 15px var(--glowColor);
         }
 
         /* Game Container */
@@ -752,30 +842,6 @@
             opacity: 1;
         }
 
-        /* Locked Overlay */
-        .locked-overlay {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            min-height: 400px;
-            text-align: center;
-        }
-
-        .locked-overlay h2 {
-            font-size: 48px;
-            color: var(--accent);
-            margin-bottom: 20px;
-        }
-
-        .locked-overlay code {
-            background: #220000;
-            padding: 5px 15px;
-            border-radius: 5px;
-            color: var(--accent);
-            font-family: monospace;
-        }
-
         /* Responsive */
         @media (max-width: 768px) {
             .sidebar {
@@ -831,14 +897,14 @@
             box-shadow: 0 5px 20px rgba(0, 255, 0, 0.5);
             display: none;
             z-index: 10000;
-            animation: slideIn 0.3s ease-out;
+            animation: slideInRight 0.3s ease-out;
         }
 
         .save-notification.show {
             display: block;
         }
 
-        @keyframes slideIn {
+        @keyframes slideInRight {
             from {
                 transform: translateX(400px);
                 opacity: 0;
@@ -849,7 +915,7 @@
             }
         }
 
-        @keyframes slideOut {
+        @keyframes slideOutRight {
             from {
                 transform: translateX(0);
                 opacity: 1;
@@ -1178,23 +1244,15 @@
 <body>
     <canvas id="snowCanvas"></canvas>
 
-    <!-- Top Menu Bar (was sidebar) -->
+    <!-- Top Menu Bar -->
     <div class="sidebar">
         <div class="sidebar-item active" id="gamesItem" onclick="switchTab('games')">
             🎮 Games
             <span class="tooltip">Browse all available games</span>
         </div>
-        <div class="sidebar-item locked" id="proxysItem" onclick="switchTab('proxys')">
-            🌐 Proxys <i class="fa-solid fa-lock lock-icon"></i>
-            <span class="tooltip">🔒 Type 'unlockproxy' to unlock</span>
-        </div>
         <div class="sidebar-item" id="settingsItem" onclick="switchTab('settings')">
             ⚙️ Settings
             <span class="tooltip">Customize your experience</span>
-        </div>
-        <div class="sidebar-item locked" id="testingItem" onclick="switchTab('testing')">
-            🧪 Testing <i class="fa-solid fa-lock lock-icon"></i>
-            <span class="tooltip">🔒 Type 'unlocktesting' to unlock</span>
         </div>
         <div class="sidebar-item" id="notificationsBtn" onclick="toggleNotifications()">
             🔔 Updates
@@ -1229,18 +1287,72 @@
             <div id="game-sections" class="game-sections"></div>
         </div>
 
-        <!-- Proxys Tab -->
-        <div class="content" id="proxys">
-            <h1 style="text-align:center; color: var(--accent); margin-bottom: 30px;">🌐 Proxy Browser</h1>
-            <div class="proxy-list" id="proxyList"></div>
-        </div>
-
         <!-- Settings Tab -->
         <div class="content" id="settings">
             <div class="settings-section">
                 <h2>🎨 Theme Customization</h2>
                 <p style="color: var(--muted); margin-bottom: 20px;">Choose your preferred color scheme</p>
                 <div class="theme-grid" id="themeGrid"></div>
+            </div>
+
+            <div class="settings-section">
+                <h2>🖼️ Custom Background</h2>
+                <p style="color: var(--muted); margin-bottom: 15px;">Upload your own background image (supports JPG, PNG, GIF)</p>
+                
+                <div id="backgroundPreview" class="background-preview">
+                    <div class="background-preview-placeholder">
+                        <p>📷 No custom background</p>
+                        <p style="font-size: 14px; margin-top: 10px;">Upload an image below</p>
+                    </div>
+                </div>
+                
+                <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                    <div class="file-input-wrapper">
+                        <input type="file" id="backgroundUpload" accept="image/*" onchange="uploadBackground(event)">
+                        <label for="backgroundUpload" class="file-input-label">📁 Choose Image</label>
+                    </div>
+                    <button class="settings-button" onclick="removeBackground()">🗑️ Remove Background</button>
+                </div>
+                
+                <div style="margin-top: 15px;">
+                    <label style="color: var(--muted); font-size: 14px;">
+                        <input type="range" id="bgOpacity" min="0" max="100" value="50" style="width: 200px; vertical-align: middle;" oninput="updateBackgroundOpacity(this.value)">
+                        Background Opacity: <span id="bgOpacityValue">50</span>%
+                    </label>
+                </div>
+            </div>
+
+            <div class="settings-section">
+                <h2>🎨 Custom Color Theme</h2>
+                <p style="color: var(--muted); margin-bottom: 15px;">Create your own color scheme</p>
+                
+                <div class="color-picker-grid" id="colorPickerGrid">
+                    <div class="color-picker-item">
+                        <label>Primary Accent</label>
+                        <input type="color" id="accentColor" value="#ff0000" onchange="updateCustomTheme()">
+                    </div>
+                    <div class="color-picker-item">
+                        <label>Background</label>
+                        <input type="color" id="bgColor" value="#1a0000" onchange="updateCustomTheme()">
+                    </div>
+                    <div class="color-picker-item">
+                        <label>Text Color</label>
+                        <input type="color" id="textColor" value="#ffffff" onchange="updateCustomTheme()">
+                    </div>
+                    <div class="color-picker-item">
+                        <label>Glow Color</label>
+                        <input type="color" id="glowColor" value="#ff0000" onchange="updateCustomTheme()">
+                    </div>
+                </div>
+                
+                <div class="color-preset-buttons">
+                    <button class="preset-button" onclick="loadColorPreset('red')">🔴 Red Theme</button>
+                    <button class="preset-button" onclick="loadColorPreset('blue')">🔵 Blue Theme</button>
+                    <button class="preset-button" onclick="loadColorPreset('green')">🟢 Green Theme</button>
+                    <button class="preset-button" onclick="loadColorPreset('purple')">🟣 Purple Theme</button>
+                    <button class="preset-button" onclick="loadColorPreset('orange')">🟠 Orange Theme</button>
+                    <button class="preset-button" onclick="resetToDefaultTheme()">↺ Reset to Default</button>
+                </div>
             </div>
 
             <div class="settings-section">
@@ -1258,14 +1370,6 @@
                 <input type="text" class="settings-input" id="tabIconInput" placeholder="Favicon URL (optional)">
                 <button class="settings-button" onclick="saveTabCustomization()">Apply Changes</button>
                 <button class="settings-button" onclick="resetTabCustomization()" style="margin-left: 10px;">Reset</button>
-            </div>
-        </div>
-
-        <!-- Testing Tab -->
-        <div class="content" id="testing">
-            <div class="locked-overlay">
-                <h2>🔒 Locked</h2>
-                <p>Type <code>unlocktesting</code> in the search bar to unlock this section.</p>
             </div>
         </div>
     </div>
@@ -1297,15 +1401,36 @@
     <div class="fullscreen-hint" id="fullscreenHint">
         Press ESC to exit fullscreen | Some games have their own fullscreen button 🎮
     </div>
+
+    <!-- Notifications Panel -->
+    <div id="notificationsPanel" class="notifications-panel">
+        <div class="notifications-header">
+            <h2>🔔 Updates</h2>
+            <div class="notifications-actions">
+                <button class="notif-btn" onclick="markAllAsRead()">Mark all read</button>
+                <button class="notif-btn close-btn" onclick="toggleNotifications()">✖</button>
+            </div>
+        </div>
+        <div class="notifications-content" id="notificationsContent">
+            <!-- Notifications will be inserted here -->
+        </div>
+    </div>
+    <div id="notificationsOverlay" class="notifications-overlay" onclick="toggleNotifications()"></div>
+
+    <!-- Save Notification -->
+    <div id="saveNotification" class="save-notification">
+        💾 Game Progress Auto-Saved!
+    </div>
+
 <script>
     // Configuration
     const GITHUB_USER = 'ProjectApex1243';
-const GITHUB_REPO = 'Unblockedweb';
-const GITHUB_BRANCH = 'master';  // ✅ Fixed
-const COVER_REPO = 'Covers-for-web';
-const COVER_URL = `https://cdn.jsdelivr.net/gh/${GITHUB_USER}/${COVER_REPO}@master`; // ⚠️ Change @main to @master if needed
+    const GITHUB_REPO = 'Unblockedweb';
+    const GITHUB_BRANCH = 'master';
+    const COVER_REPO = 'Covers-for-web';
+    const COVER_URL = `https://cdn.jsdelivr.net/gh/${GITHUB_USER}/${COVER_REPO}@master`;
 
-    // Games data - Load from JSON
+    // ===== PASTE YOUR GAMES HERE =====
    const GAMES_JSON = [
   {
     "id": -1,
@@ -5927,244 +6052,534 @@ const COVER_URL = `https://cdn.jsdelivr.net/gh/${GITHUB_USER}/${COVER_REPO}@mast
        
 ];
 
-    let games = [];
-    let proxies = [];
-    let currentGame = { filename: '', title: '' };
-    let proxyUnlocked = localStorage.getItem('proxyUnlocked') === 'true';
-    let testingUnlocked = localStorage.getItem('testingUnlocked') === 'true';
 
-    // Theme system with all 27 themes
+    const BIBLE_VERSES = [
+        { text: "For God so loved the world that he gave his one and only Son, that whoever believes in him shall not perish but have eternal life.", reference: "John 3:16" },
+        { text: "I can do all things through Christ who strengthens me.", reference: "Philippians 4:13" },
+        { text: "Trust in the Lord with all your heart and lean not on your own understanding.", reference: "Proverbs 3:5" },
+        { text: "The Lord is my shepherd, I lack nothing.", reference: "Psalm 23:1" },
+        { text: "Be strong and courageous. Do not be afraid; do not be discouraged, for the Lord your God will be with you wherever you go.", reference: "Joshua 1:9" },
+        { text: "For I know the plans I have for you, declares the Lord, plans to prosper you and not to harm you, plans to give you hope and a future.", reference: "Jeremiah 29:11" },
+        { text: "Cast all your anxiety on him because he cares for you.", reference: "1 Peter 5:7" },
+        { text: "Do not conform to the pattern of this world, but be transformed by the renewing of your mind.", reference: "Romans 12:2" },
+        { text: "The Lord will fight for you; you need only to be still.", reference: "Exodus 14:14" },
+        { text: "In all your ways acknowledge him, and he will make straight your paths.", reference: "Proverbs 3:6" }
+    ];
+
+    // Themes
     const themes = {
-        midnight_blossom: {
-            bg: "#1a1023", header: "#2a1738", text: "#f8eaff", muted: "#d7c6e6",
-            accent: "#ff7bda", accentDark: "#b30088", glowColor: "#ffb3ef", cardBg: "#261332",
-            cardRadius: 12, glowSize: 28, glowStrength: 0.55, fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
-            snowColor: "#ffcdf5", snowCount: 130, snowSize: 3, snowSpeed: 1.4
-        },
-        emerald_peak: {
-            bg: "#051914", header: "#0b2c22", text: "#dcfff5", muted: "#b9e6d2",
-            accent: "#4cffc1", accentDark: "#158f6b", glowColor: "#77ffd9", cardBg: "#0f3b2c",
-            cardRadius: 14, glowSize: 22, glowStrength: 0.4, fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
-            snowColor: "#a8ffe5", snowCount: 110, snowSize: 3, snowSpeed: 1.2
-        },
-        solar_flare: {
-            bg: "#2a0b00", header: "#4d1300", text: "#ffe6d4", muted: "#ffc4a1",
-            accent: "#ff5e00", accentDark: "#a63500", glowColor: "#ff9e66", cardBg: "#3b0f00",
-            cardRadius: 10, glowSize: 33, glowStrength: 0.6, fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
-            snowColor: "#ff7033", snowCount: 85, snowSize: 4, snowSpeed: 1.7
-        },
-        frostbyte: {
-            bg: "#02131e", header: "#062738", text: "#ddf7ff", muted: "#b8e5f2",
-            accent: "#52d7ff", accentDark: "#1e7da3", glowColor: "#b8f5ff", cardBg: "#0a2c40",
-            cardRadius: 18, glowSize: 25, glowStrength: 0.52, fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
-            snowColor: "#cff7ff", snowCount: 200, snowSize: 2, snowSpeed: 1.1
-        },
-        bubblegum_dream: {
-            bg: "#ffdef2", header: "#ffd1ee", text: "#5e004a", muted: "#8a006b",
-            accent: "#ff77cf", accentDark: "#d1008d", glowColor: "#ffb0e8", cardBg: "#ffd8ef",
-            cardRadius: 20, glowSize: 20, glowStrength: 0.4, fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
-            snowColor: "#ff87d9", snowCount: 50, snowSize: 5, snowSpeed: 0.8
-        },
-        radioactive_neon: {
-            bg: "#031301", header: "#062705", text: "#dfffda", muted: "#b9e6bc",
-            accent: "#39ff14", accentDark: "#1faf08", glowColor: "#7dff67", cardBg: "#0b3d09",
-            cardRadius: 10, glowSize: 40, glowStrength: 0.9, fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
-            snowColor: "#7fff52", snowCount: 150, snowSize: 3, snowSpeed: 1.6
-        },
-        sunset_sorbet: {
-            bg: "#3b0f1c", header: "#5c1830", text: "#ffeef5", muted: "#ffbfd5",
-            accent: "#ff668f", accentDark: "#b33252", glowColor: "#ff9cb5", cardBg: "#471427",
-            cardRadius: 15, glowSize: 30, glowStrength: 0.5, fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
-            snowColor: "#ffb6ce", snowCount: 120, snowSize: 3, snowSpeed: 1.3
-        },
-        cafe_mocha: {
-            bg: "#2a1a10", header: "#3b2415", text: "#ffe8d8", muted: "#d9c3b5",
-            accent: "#b87445", accentDark: "#7c4c2d", glowColor: "#d8a986", cardBg: "#351f13",
-            cardRadius: 12, glowSize: 18, glowStrength: 0.38, fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
-            snowColor: "#c59c7a", snowCount: 60, snowSize: 4, snowSpeed: 0.9
-        },
-        aqua_wave: {
-            bg: "#001a26", header: "#003344", text: "#dcf8ff", muted: "#b9e6f2",
-            accent: "#3ddcff", accentDark: "#117d99", glowColor: "#8af0ff", cardBg: "#002a38",
-            cardRadius: 16, glowSize: 26, glowStrength: 0.58, fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
-            snowColor: "#a8f6ff", snowCount: 140, snowSize: 3, snowSpeed: 1.4
-        },
-        moonlight_silver: {
-            bg: "#0f0f14", header: "#1a1a22", text: "#f2f2f6", muted: "#bcbcc6",
-            accent: "#9ea4ff", accentDark: "#5056c8", glowColor: "#c4c7ff", cardBg: "#16161d",
-            cardRadius: 12, glowSize: 28, glowStrength: 0.5, fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
-            snowColor: "#d3d6ff", snowCount: 120, snowSize: 3, snowSpeed: 1.2
-        },
-        jungle_mist: {
-            bg: "#0b1f12", header: "#153423", text: "#e8ffe8", muted: "#cceccc",
-            accent: "#66ff8c", accentDark: "#27994a", glowColor: "#99ffc0", cardBg: "#102a1a",
-            cardRadius: 14, glowSize: 22, glowStrength: 0.43, fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
-            snowColor: "#b6ffd2", snowCount: 90, snowSize: 3, snowSpeed: 1.3
-        },
-        ocean_dusk: {
-            bg: "#001224", header: "#002544", text: "#dff2ff", muted: "#b8d7e6",
-            accent: "#6cb8ff", accentDark: "#2c6ba3", glowColor: "#a3d7ff", cardBg: "#001d33",
-            cardRadius: 18, glowSize: 24, glowStrength: 0.45, fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
-            snowColor: "#bcdfff", snowCount: 160, snowSize: 2, snowSpeed: 1.1
-        },
-        pink_frost: {
-            bg: "#2b0d1f", header: "#471634", text: "#ffdff5", muted: "#f1b9d8",
-            accent: "#ff7ec4", accentDark: "#b24284", glowColor: "#ffb2dc", cardBg: "#3b122a",
-            cardRadius: 16, glowSize: 34, glowStrength: 0.6, fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
-            snowColor: "#ffc2e6", snowCount: 150, snowSize: 3, snowSpeed: 1.5
-        },
-        techno_grid: {
-            bg: "#0a0a0f", header: "#15151f", text: "#e3e9ff", muted: "#b7c0e6",
-            accent: "#40bbff", accentDark: "#1778a3", glowColor: "#89d8ff", cardBg: "#12121a",
-            cardRadius: 12, glowSize: 36, glowStrength: 0.75, fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
-            snowColor: "#66ccff", snowCount: 180, snowSize: 3, snowSpeed: 1.6
-        },
-        sunny_field: {
-            bg: "#fff8d9", header: "#ffeeb3", text: "#663e00", muted: "#8c5c1a",
-            accent: "#ffcc33", accentDark: "#c78a00", glowColor: "#ffe57a", cardBg: "#fff1bf",
-            cardRadius: 20, glowSize: 20, glowStrength: 0.35, fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
-            snowColor: "#ffe28a", snowCount: 50, snowSize: 4, snowSpeed: 0.9
-        },
-        mint_leaf: {
-            bg: "#e6fff4", header: "#c6ffe6", text: "#004d33", muted: "#267359",
-            accent: "#33ffb8", accentDark: "#0fa36e", glowColor: "#8cffd7", cardBg: "#d2ffe8",
-            cardRadius: 18, glowSize: 18, glowStrength: 0.32, fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
-            snowColor: "#a0ffe6", snowCount: 40, snowSize: 5, snowSpeed: 0.7
-        },
-        void_shadow: {
-            bg: "#000000", header: "#0a0a0a", text: "#e6e6e6", muted: "#999999",
-            accent: "#5a5a5a", accentDark: "#2a2a2a", glowColor: "#bbbbbb", cardBg: "#080808",
-            cardRadius: 10, glowSize: 40, glowStrength: 0.8, fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
-            snowColor: "#cccccc", snowCount: 200, snowSize: 2, snowSpeed: 1.2
-        },
-        ruby_crystal: {
-            bg: "#290001", header: "#400002", text: "#ffe5e8", muted: "#ffb3bb",
-            accent: "#ff3355", accentDark: "#a30024", glowColor: "#ff8899", cardBg: "#320002",
-            cardRadius: 14, glowSize: 32, glowStrength: 0.6, fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
-            snowColor: "#ff99aa", snowCount: 130, snowSize: 3, snowSpeed: 1.6
-        },
-        arctic_bloom: {
-            bg: "#f2fcff", header: "#dff8ff", text: "#004f63", muted: "#1b6e84",
-            accent: "#53dfff", accentDark: "#0c8ba3", glowColor: "#9eeeff", cardBg: "#e7f9ff",
-            cardRadius: 18, glowSize: 18, glowStrength: 0.3, fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
-            snowColor: "#bbf2ff", snowCount: 60, snowSize: 4, snowSpeed: 0.9
-        },
-        honey_glow: {
-            bg: "#2a1900", header: "#412600", text: "#ffefcc", muted: "#ddc7a1",
-            accent: "#ffb300", accentDark: "#a67300", glowColor: "#ffd677", cardBg: "#352000",
-            cardRadius: 12, glowSize: 26, glowStrength: 0.46, fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
-            snowColor: "#ffcf87", snowCount: 100, snowSize: 3, snowSpeed: 1.2
-        },
-        acid_punch: {
-            bg: "#12001a", header: "#260033", text: "#ffe6ff", muted: "#d9b3e6",
-            accent: "#ff00cc", accentDark: "#99007a", glowColor: "#ff80dd", cardBg: "#1c0026",
-            cardRadius: 16, glowSize: 38, glowStrength: 0.72, fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
-            snowColor: "#ffaae8", snowCount: 150, snowSize: 3, snowSpeed: 1.5
-        },
-        arctic_night: {
-            bg: "#06080f", header: "#0b1120", text: "#dde6ff", muted: "#a7b4d9",
-            accent: "#5577ff", accentDark: "#2a3c99", glowColor: "#9bb5ff", cardBg: "#090d14",
-            cardRadius: 10, glowSize: 27, glowStrength: 0.55, fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
-            snowColor: "#c3d2ff", snowCount: 170, snowSize: 3, snowSpeed: 1.4
-        },
-        rainforest_dew: {
-            bg: "#0d1f17", header: "#123026", text: "#e0fff3", muted: "#bee6d8",
-            accent: "#4cffac", accentDark: "#1d8f64", glowColor: "#92ffd3", cardBg: "#102a20",
-            cardRadius: 14, glowSize: 24, glowStrength: 0.42, fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
-            snowColor: "#b6ffe1", snowCount: 100, snowSize: 3, snowSpeed: 1.2
-        },
-        candy_arcade: {
-            bg: "#230011", header: "#3b001b", text: "#ffebf3", muted: "#ffc4db",
-            accent: "#ff4fa4", accentDark: "#a30062", glowColor: "#ff9bcf", cardBg: "#310016",
-            cardRadius: 18, glowSize: 36, glowStrength: 0.7, fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
-            snowColor: "#ffb4da", snowCount: 140, snowSize: 3, snowSpeed: 1.5
-        },
-        obsidian_gold: {
-            bg: "#0a0905", header: "#1a180f", text: "#f7e7bf", muted: "#d4c193",
-            accent: "#e6b400", accentDark: "#9c7d00", glowColor: "#ffe680", cardBg: "#12110a",
-            cardRadius: 12, glowSize: 28, glowStrength: 0.55, fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
-            snowColor: "#f5d97c", snowCount: 100, snowSize: 3, snowSpeed: 1.3
-        },
-        glacial_berry: {
-            bg: "#1e0033", header: "#32004f", text: "#f4e6ff", muted: "#d4b3f7",
-            accent: "#bf59ff", accentDark: "#7826a6", glowColor: "#d9a3ff", cardBg: "#290041",
-            cardRadius: 15, glowSize: 33, glowStrength: 0.6, fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
-            snowColor: "#e7c3ff", snowCount: 145, snowSize: 3, snowSpeed: 1.5
-        },
-        lavender_fade: {
-            bg: "#f4edff", header: "#e9ddff", text: "#3b2b66", muted: "#695a91",
-            accent: "#b899ff", accentDark: "#6f59b3", glowColor: "#d2c2ff", cardBg: "#ede3ff",
-            cardRadius: 20, glowSize: 20, glowStrength: 0.33, fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
-            snowColor: "#d8caff", snowCount: 60, snowSize: 4, snowSpeed: 0.8
-        }
+        'Dark Red': { bg: '#1a0000', header: '#330000', text: '#fff', muted: '#ccc', accent: '#ff0000', accentDark: '#cc0000', glowColor: '#ff0000', cardBg: '#1a0000' },
+        'Dark Blue': { bg: '#000a1a', header: '#001933', text: '#fff', muted: '#ccc', accent: '#0055ff', accentDark: '#0044cc', glowColor: '#0055ff', cardBg: '#000a1a' },
+        'Dark Purple': { bg: '#0f001a', header: '#1a0033', text: '#fff', muted: '#ccc', accent: '#aa00ff', accentDark: '#8800cc', glowColor: '#aa00ff', cardBg: '#0f001a' },
+        'Dark Green': { bg: '#001a00', header: '#003300', text: '#fff', muted: '#ccc', accent: '#00ff00', accentDark: '#00cc00', glowColor: '#00ff00', cardBg: '#001a00' },
+        'Orange Blaze': { bg: '#1a0a00', header: '#331400', text: '#fff', muted: '#ccc', accent: '#ff6600', accentDark: '#cc5200', glowColor: '#ff6600', cardBg: '#1a0a00' },
+        'Pink Neon': { bg: '#1a0010', header: '#330020', text: '#fff', muted: '#ccc', accent: '#ff0099', accentDark: '#cc0077', glowColor: '#ff0099', cardBg: '#1a0010' },
+        'Cyan Wave': { bg: '#001a1a', header: '#003333', text: '#fff', muted: '#ccc', accent: '#00ffff', accentDark: '#00cccc', glowColor: '#00ffff', cardBg: '#001a1a' },
+        'Yellow Spark': { bg: '#1a1a00', header: '#333300', text: '#000', muted: '#666', accent: '#ffff00', accentDark: '#cccc00', glowColor: '#ffff00', cardBg: '#1a1a00' },
+        'Magenta Glow': { bg: '#1a001a', header: '#330033', text: '#fff', muted: '#ccc', accent: '#ff00ff', accentDark: '#cc00cc', glowColor: '#ff00ff', cardBg: '#1a001a' },
+        'Midnight': { bg: '#000000', header: '#0a0a0a', text: '#fff', muted: '#ccc', accent: '#4a4a4a', accentDark: '#2a2a2a', glowColor: '#666666', cardBg: '#000000' },
+        'Lime Blast': { bg: '#0a1a00', header: '#143300', text: '#fff', muted: '#ccc', accent: '#88ff00', accentDark: '#66cc00', glowColor: '#88ff00', cardBg: '#0a1a00' },
+        'Ice Blue': { bg: '#00101a', header: '#002033', text: '#fff', muted: '#ccc', accent: '#00aaff', accentDark: '#0088cc', glowColor: '#00aaff', cardBg: '#00101a' },
+        'Crimson': { bg: '#1a0005', header: '#33000a', text: '#fff', muted: '#ccc', accent: '#dc143c', accentDark: '#a0102a', glowColor: '#dc143c', cardBg: '#1a0005' },
+        'Violet': { bg: '#0d001a', header: '#190033', text: '#fff', muted: '#ccc', accent: '#8b00ff', accentDark: '#6600cc', glowColor: '#8b00ff', cardBg: '#0d001a' },
+        'Forest': { bg: '#001a0a', header: '#003314', text: '#fff', muted: '#ccc', accent: '#22aa55', accentDark: '#1a8844', glowColor: '#22aa55', cardBg: '#001a0a' },
+        'Gold': { bg: '#1a1500', header: '#332a00', text: '#000', muted: '#666', accent: '#ffd700', accentDark: '#ccac00', glowColor: '#ffd700', cardBg: '#1a1500' },
+        'Ruby': { bg: '#1a0008', header: '#330010', text: '#fff', muted: '#ccc', accent: '#e0115f', accentDark: '#b00e4c', glowColor: '#e0115f', cardBg: '#1a0008' },
+        'Emerald': { bg: '#001a10', header: '#003320', text: '#fff', muted: '#ccc', accent: '#50c878', accentDark: '#3fa060', glowColor: '#50c878', cardBg: '#001a10' },
+        'Sapphire': { bg: '#00081a', header: '#001033', text: '#fff', muted: '#ccc', accent: '#0f52ba', accentDark: '#0c4294', glowColor: '#0f52ba', cardBg: '#00081a' },
+        'Coral': { bg: '#1a0a08', header: '#331410', text: '#fff', muted: '#ccc', accent: '#ff7f50', accentDark: '#cc6640', glowColor: '#ff7f50', cardBg: '#1a0a08' },
+        'Mint': { bg: '#081a15', header: '#10332a', text: '#fff', muted: '#ccc', accent: '#3eb489', accentDark: '#32906e', glowColor: '#3eb489', cardBg: '#081a15' },
+        'Lavender': { bg: '#0f0a1a', header: '#1e1433', text: '#fff', muted: '#ccc', accent: '#b57edc', accentDark: '#9165b0', glowColor: '#b57edc', cardBg: '#0f0a1a' },
+        'Amber': { bg: '#1a1208', header: '#332410', text: '#000', muted: '#666', accent: '#ffbf00', accentDark: '#cc9900', glowColor: '#ffbf00', cardBg: '#1a1208' },
+        'Teal': { bg: '#001a1a', header: '#003333', text: '#fff', muted: '#ccc', accent: '#008080', accentDark: '#006666', glowColor: '#008080', cardBg: '#001a1a' },
+        'Maroon': { bg: '#1a0000', header: '#330000', text: '#fff', muted: '#ccc', accent: '#800000', accentDark: '#660000', glowColor: '#800000', cardBg: '#1a0000' },
+        'Indigo': { bg: '#08001a', header: '#100033', text: '#fff', muted: '#ccc', accent: '#4b0082', accentDark: '#3c0068', glowColor: '#4b0082', cardBg: '#08001a' },
+        'Peach': { bg: '#1a0f08', header: '#331e10', text: '#000', muted: '#666', accent: '#ffcc99', accentDark: '#cca37a', glowColor: '#ffcc99', cardBg: '#1a0f08' },
+        'Plum': { bg: '#150a1a', header: '#2a1433', text: '#fff', muted: '#ccc', accent: '#dda0dd', accentDark: '#b180b1', glowColor: '#dda0dd', cardBg: '#150a1a' }
     };
 
-    let currentTheme = localStorage.getItem('selectedTheme') || 'midnight_blossom';
+    // Notifications
+    const NOTIFICATIONS = [
+        {
+            id: 'notif_20251210_003',
+            type: 'update',
+            title: 'New Small Updates',
+            description: 'Multiple new features added: notification system, custom background uploader, and color theme editor!',
+            fullContent: 'We\'ve added several exciting features:\n\n• Notification System: Stay updated with new features and announcements\n• Custom Background Uploader: Upload your own images (including GIFs) to personalize your launcher\n• Custom Color Theme Editor: Create your own color schemes or use preset themes\n• Background opacity control for perfect customization\n\nAll your settings are saved automatically!',
+            date: 'December 10, 2024',
+            unread: true
+        }
+    ];
 
+    // State
+    let allGames = [];
+    let filteredGames = [];
+    let currentTheme = 'Dark Red';
+    let currentGame = null;
+    let fullscreenHintTimeout;
+
+    // Initialize
+    function initializeLauncher() {
+        allGames = GAMES_JSON;
+        filteredGames = [...allGames];
+        
+        applyTheme(currentTheme);
+        renderThemeGrid();
+        renderAlphabetNav();
+        renderGameSections();
+        loadTeacherLink();
+        loadTabCustomization();
+        loadCustomBackground();
+        loadCustomTheme();
+        loadNotifications();
+        
+        initSnowEffect();
+        
+        setTimeout(() => {
+            document.getElementById('initial-loader').style.display = 'none';
+            document.getElementById('main-content').style.display = 'flex';
+        }, 1500);
+    }
+
+    // Theme System
     function applyTheme(themeName) {
         const theme = themes[themeName];
         if (!theme) return;
         
         const root = document.documentElement;
-        
-        // Apply all theme properties
-        root.style.setProperty('--bg', theme.bg);
-        root.style.setProperty('--header', theme.header);
-        root.style.setProperty('--text', theme.text);
-        root.style.setProperty('--muted', theme.muted);
-        root.style.setProperty('--accent', theme.accent);
-        root.style.setProperty('--accentDark', theme.accentDark);
-        root.style.setProperty('--glowColor', theme.glowColor);
-        root.style.setProperty('--cardBg', theme.cardBg);
-        root.style.setProperty('--cardRadius', theme.cardRadius + 'px');
-        root.style.setProperty('--glowSize', theme.glowSize + 'px');
-        root.style.setProperty('--glowStrength', theme.glowStrength);
-        root.style.setProperty('--fontFamily', theme.fontFamily);
-        root.style.setProperty('--snowColor', theme.snowColor);
-        root.style.setProperty('--snowCount', theme.snowCount);
-        root.style.setProperty('--snowSize', theme.snowSize);
-        root.style.setProperty('--snowSpeed', theme.snowSpeed);
+        Object.keys(theme).forEach(key => {
+            root.style.setProperty(`--${key}`, theme[key]);
+        });
         
         currentTheme = themeName;
         localStorage.setItem('selectedTheme', themeName);
         
-        // Recreate snow effect with new theme settings
-        createSnowEffect();
+        updateThemeGridSelection();
     }
 
     function renderThemeGrid() {
         const grid = document.getElementById('themeGrid');
-        grid.innerHTML = Object.keys(themes).map(name => {
-            const theme = themes[name];
-            const active = name === currentTheme ? 'active' : '';
-            const displayName = name.split('_').map(word => 
-                word.charAt(0).toUpperCase() + word.slice(1)
-            ).join(' ');
-            
-            return `
-                <div class="theme-option ${active}" 
-                     style="background: ${theme.bg}; border-color: ${theme.accent}; color: ${theme.text};"
-                     onclick="applyTheme('${name}'); renderThemeGrid();">
-                    ${displayName}
+        grid.innerHTML = '';
+        
+        Object.keys(themes).forEach(themeName => {
+            const theme = themes[themeName];
+            const div = document.createElement('div');
+            div.className = 'theme-option';
+            div.style.borderColor = theme.accent;
+            div.style.background = `linear-gradient(145deg, ${theme.bg}, ${theme.cardBg})`;
+            div.style.color = theme.text;
+            div.textContent = themeName;
+            div.onclick = () => applyTheme(themeName);
+            grid.appendChild(div);
+        });
+        
+        updateThemeGridSelection();
+    }
+
+    function updateThemeGridSelection() {
+        document.querySelectorAll('.theme-option').forEach((option, index) => {
+            const themeName = Object.keys(themes)[index];
+            if (themeName === currentTheme) {
+                option.classList.add('active');
+                option.style.boxShadow = `0 0 20px ${themes[themeName].glowColor}`;
+            } else {
+                option.classList.remove('active');
+                option.style.boxShadow = '';
+            }
+        });
+    }
+
+    // Custom Background Functions
+    function uploadBackground(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+        
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const base64 = e.target.result;
+            localStorage.setItem('customBackground', base64);
+            applyCustomBackground(base64);
+            updateBackgroundPreview(base64);
+        };
+        reader.readAsDataURL(file);
+    }
+
+    function applyCustomBackground(base64Data) {
+        if (!base64Data) {
+            document.body.classList.remove('has-custom-background');
+            document.body.style.setProperty('--custom-bg', 'none');
+            return;
+        }
+        
+        document.body.style.setProperty('--custom-bg', `url(${base64Data})`);
+        document.body.classList.add('has-custom-background');
+        
+        // Update the ::before element
+        const style = document.createElement('style');
+        style.id = 'custom-bg-style';
+        const existingStyle = document.getElementById('custom-bg-style');
+        if (existingStyle) existingStyle.remove();
+        
+        const opacity = localStorage.getItem('bgOpacity') || 50;
+        style.textContent = `
+            body::before {
+                background-image: url(${base64Data});
+                opacity: ${opacity / 100};
+            }
+        `;
+        document.head.appendChild(style);
+    }
+
+    function updateBackgroundPreview(base64Data) {
+        const preview = document.getElementById('backgroundPreview');
+        if (!base64Data) {
+            preview.classList.remove('has-image');
+            preview.style.backgroundImage = '';
+            preview.innerHTML = `
+                <div class="background-preview-placeholder">
+                    <p>📷 No custom background</p>
+                    <p style="font-size: 14px; margin-top: 10px;">Upload an image below</p>
                 </div>
             `;
-        }).join('');
+            return;
+        }
+        
+        preview.classList.add('has-image');
+        preview.style.backgroundImage = `url(${base64Data})`;
+        preview.innerHTML = '';
     }
 
-    // [REST OF YOUR JAVASCRIPT CODE CONTINUES HERE - all the other functions]
-    // ... (keep all your other functions like saveTeacherLink, filterGames, etc.)
+    function removeBackground() {
+        localStorage.removeItem('customBackground');
+        document.body.classList.remove('has-custom-background');
+        const style = document.getElementById('custom-bg-style');
+        if (style) style.remove();
+        updateBackgroundPreview(null);
+        document.getElementById('backgroundUpload').value = '';
+    }
+
+    function updateBackgroundOpacity(value) {
+        document.getElementById('bgOpacityValue').textContent = value;
+        localStorage.setItem('bgOpacity', value);
+        
+        const customBg = localStorage.getItem('customBackground');
+        if (customBg) {
+            applyCustomBackground(customBg);
+        }
+    }
+
+    function loadCustomBackground() {
+        const customBg = localStorage.getItem('customBackground');
+        const opacity = localStorage.getItem('bgOpacity') || 50;
+        
+        document.getElementById('bgOpacity').value = opacity;
+        document.getElementById('bgOpacityValue').textContent = opacity;
+        
+        if (customBg) {
+            applyCustomBackground(customBg);
+            updateBackgroundPreview(customBg);
+        }
+    }
+
+    // Custom Color Theme Functions
+    function updateCustomTheme() {
+        const accentColor = document.getElementById('accentColor').value;
+        const bgColor = document.getElementById('bgColor').value;
+        const textColor = document.getElementById('textColor').value;
+        const glowColor = document.getElementById('glowColor').value;
+        
+        const customTheme = {
+            accent: accentColor,
+            accentDark: adjustBrightness(accentColor, -20),
+            bg: bgColor,
+            header: adjustBrightness(bgColor, 20),
+            text: textColor,
+            muted: adjustBrightness(textColor, -30),
+            glowColor: glowColor,
+            cardBg: bgColor
+        };
+        
+        // Apply theme
+        const root = document.documentElement;
+        Object.keys(customTheme).forEach(key => {
+            root.style.setProperty(`--${key}`, customTheme[key]);
+        });
+        
+        // Save to localStorage
+        localStorage.setItem('customTheme', JSON.stringify(customTheme));
+        localStorage.setItem('selectedTheme', 'custom');
+        currentTheme = 'custom';
+    }
+
+    function adjustBrightness(color, percent) {
+        const num = parseInt(color.replace('#',''), 16);
+        const amt = Math.round(2.55 * percent);
+        const R = (num >> 16) + amt;
+        const G = (num >> 8 & 0x00FF) + amt;
+        const B = (num & 0x0000FF) + amt;
+        return '#' + (0x1000000 + (R<255?R<1?0:R:255)*0x10000 +
+                    (G<255?G<1?0:G:255)*0x100 +
+                    (B<255?B<1?0:B:255))
+                    .toString(16).slice(1);
+    }
+
+    function loadColorPreset(presetName) {
+        const presets = {
+            red: { accent: '#ff0000', bg: '#1a0000', text: '#ffffff', glow: '#ff0000' },
+            blue: { accent: '#0055ff', bg: '#000a1a', text: '#ffffff', glow: '#0055ff' },
+            green: { accent: '#00ff00', bg: '#001a00', text: '#ffffff', glow: '#00ff00' },
+            purple: { accent: '#aa00ff', bg: '#0f001a', text: '#ffffff', glow: '#aa00ff' },
+            orange: { accent: '#ff6600', bg: '#1a0a00', text: '#ffffff', glow: '#ff6600' }
+        };
+        
+        const preset = presets[presetName];
+        if (!preset) return;
+        
+        document.getElementById('accentColor').value = preset.accent;
+        document.getElementById('bgColor').value = preset.bg;
+        document.getElementById('textColor').value = preset.text;
+        document.getElementById('glowColor').value = preset.glow;
+        
+        updateCustomTheme();
+    }
+
+    function resetToDefaultTheme() {
+        localStorage.removeItem('customTheme');
+        localStorage.setItem('selectedTheme', 'Dark Red');
+        applyTheme('Dark Red');
+        
+        // Reset color pickers
+        document.getElementById('accentColor').value = '#ff0000';
+        document.getElementById('bgColor').value = '#1a0000';
+        document.getElementById('textColor').value = '#ffffff';
+        document.getElementById('glowColor').value = '#ff0000';
+    }
+
+    function loadCustomTheme() {
+        const savedTheme = localStorage.getItem('selectedTheme');
+        const customTheme = localStorage.getItem('customTheme');
+        
+        if (savedTheme === 'custom' && customTheme) {
+            const theme = JSON.parse(customTheme);
+            document.getElementById('accentColor').value = theme.accent;
+            document.getElementById('bgColor').value = theme.bg;
+            document.getElementById('textColor').value = theme.text;
+            document.getElementById('glowColor').value = theme.glowColor;
+            updateCustomTheme();
+        } else if (savedTheme && themes[savedTheme]) {
+            applyTheme(savedTheme);
+        }
+    }
+
+    // Alphabet Navigation
+    function renderAlphabetNav() {
+        const nav = document.getElementById('alphabetNav');
+        nav.innerHTML = '';
+        
+        const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'.split('');
+        const availableLetters = new Set(
+            allGames.map(g => g.name.charAt(0).toUpperCase())
+        );
+        
+        letters.forEach(letter => {
+            const btn = document.createElement('div');
+            btn.className = 'alphabet-letter';
+            btn.textContent = letter;
+            
+            if (!availableLetters.has(letter)) {
+                btn.classList.add('disabled');
+            } else {
+                btn.onclick = () => filterByLetter(letter);
+            }
+            
+            nav.appendChild(btn);
+        });
+    }
+
+    function filterByLetter(letter) {
+        filteredGames = allGames.filter(game => 
+            game.name.toUpperCase().startsWith(letter)
+        );
+        renderGameSections();
+    }
+
+    // Game Sections
+    function renderGameSections() {
+        const container = document.getElementById('game-sections');
+        const noResults = document.getElementById('noResults');
+        
+        if (filteredGames.length === 0) {
+            container.style.display = 'none';
+            noResults.style.display = 'block';
+            return;
+        }
+        
+        container.style.display = 'block';
+        noResults.style.display = 'none';
+        container.innerHTML = '';
+        
+        // Group games by first letter
+        const grouped = {};
+        filteredGames.forEach(game => {
+            const letter = game.name.charAt(0).toUpperCase();
+            if (!grouped[letter]) grouped[letter] = [];
+            grouped[letter].push(game);
+        });
+        
+        // Render each section
+        Object.keys(grouped).sort().forEach(letter => {
+            const section = document.createElement('div');
+            section.innerHTML = `<div class="section-title">${letter}</div>`;
+            
+            const grid = document.createElement('div');
+            grid.className = 'game-grid';
+            
+            grouped[letter].forEach(game => {
+                const card = createGameCard(game);
+                grid.appendChild(card);
+            });
+            
+            section.appendChild(grid);
+            container.appendChild(section);
+        });
+    }
+
+    function createGameCard(game) {
+        const card = document.createElement('div');
+        card.className = 'game-card';
+        card.onclick = () => loadGame(game);
+        
+        const isExternal = game.url.startsWith('http');
+        
+        card.innerHTML = `
+            ${isExternal ? '<div class="external-link-badge">External</div>' : ''}
+            <img src="${game.cover}" alt="${game.name}" class="game-cover" onerror="this.outerHTML='<div class=\\'game-cover placeholder\\'>🎮</div>'">
+            <div class="game-info">
+                <h3>${game.name}</h3>
+                ${game.author ? `<div class="game-author">by ${game.author}</div>` : ''}
+            </div>
+        `;
+        
+        return card;
+    }
+
+    // Search
+    function filterGames() {
+        const query = document.getElementById('searchInput').value.toLowerCase();
+        
+        if (!query) {
+            filteredGames = [...allGames];
+        } else {
+            filteredGames = allGames.filter(game =>
+                game.name.toLowerCase().includes(query) ||
+                (game.author && game.author.toLowerCase().includes(query))
+            );
+        }
+        
+        renderGameSections();
+    }
+
+    function clearSearch() {
+        document.getElementById('searchInput').value = '';
+        filteredGames = [...allGames];
+        renderGameSections();
+    }
+
+    // Load Game
+    function loadGame(game) {
+        if (game.url.startsWith('http')) {
+            window.open(game.url, '_blank');
+            return;
+        }
+        
+        currentGame = game;
+        showGameLoader();
+        
+        setTimeout(() => {
+            const gameUrl = `https://cdn.jsdelivr.net/gh/${GITHUB_USER}/${GITHUB_REPO}@${GITHUB_BRANCH}/${game.url}`;
+            document.getElementById('game-frame').src = gameUrl;
+            document.getElementById('currentGameTitle').textContent = game.name;
+            
+            hideGameLoader();
+            document.getElementById('game-container').style.display = 'flex';
+            
+            showFullscreenHint();
+        }, 2000);
+    }
+
+    function showGameLoader() {
+        const verse = BIBLE_VERSES[Math.floor(Math.random() * BIBLE_VERSES.length)];
+        document.getElementById('verseText').textContent = verse.text;
+        document.getElementById('verseReference').textContent = verse.reference;
+        document.getElementById('game-loader').style.display = 'flex';
+    }
+
+    function hideGameLoader() {
+        document.getElementById('game-loader').style.display = 'none';
+    }
+
+    function closeGame() {
+        document.getElementById('game-container').style.display = 'none';
+        document.getElementById('game-frame').src = '';
+        currentGame = null;
+    }
+
+    function reloadGame() {
+        const frame = document.getElementById('game-frame');
+        frame.src = frame.src;
+    }
+
+    function toggleFullscreen() {
+        const container = document.getElementById('game-container');
+        
+        if (!document.fullscreenElement) {
+            container.requestFullscreen().catch(err => {
+                console.error('Fullscreen error:', err);
+            });
+        } else {
+            document.exitFullscreen();
+        }
+    }
+
+    function showFullscreenHint() {
+        const hint = document.getElementById('fullscreenHint');
+        hint.classList.add('show');
+        
+        clearTimeout(fullscreenHintTimeout);
+        fullscreenHintTimeout = setTimeout(() => {
+            hint.classList.remove('show');
+        }, 5000);
+    }
+
+    function saveGameState() {
+        const notif = document.getElementById('saveNotification');
+        notif.classList.add('show');
+        
+        setTimeout(() => {
+            notif.classList.remove('show');
+        }, 3000);
+    }
+
+    // Tab Switching
+    function switchTab(tabName) {
+        // Update sidebar
+        document.querySelectorAll('.sidebar-item').forEach(item => {
+            item.classList.remove('active');
+        });
+        document.getElementById(`${tabName}Item`).classList.add('active');
+        
+        // Update content
+        document.querySelectorAll('.content').forEach(content => {
+            content.classList.remove('active');
+        });
+        document.getElementById(tabName).classList.add('active');
+    }
+
     // Teacher Link
     function saveTeacherLink() {
-        const input = document.getElementById('teacherLinkInput');
-        localStorage.setItem('teacherLink', input.value);
+        const link = document.getElementById('teacherLinkInput').value;
+        localStorage.setItem('teacherLink', link);
         alert('Teacher link saved!');
-    }
-
-    function loadTeacherLink() {
-        const saved = localStorage.getItem('teacherLink');
-        if (saved) {
-            document.getElementById('teacherLinkInput').value = saved;
-        }
     }
 
     function openTeacherLink() {
@@ -6172,7 +6587,14 @@ const COVER_URL = `https://cdn.jsdelivr.net/gh/${GITHUB_USER}/${COVER_REPO}@mast
         if (link) {
             window.open(link, '_blank');
         } else {
-            alert('No teacher link saved. Please set one first.');
+            alert('No teacher link saved!');
+        }
+    }
+
+    function loadTeacherLink() {
+        const link = localStorage.getItem('teacherLink');
+        if (link) {
+            document.getElementById('teacherLinkInput').value = link;
         }
     }
 
@@ -6183,7 +6605,7 @@ const COVER_URL = `https://cdn.jsdelivr.net/gh/${GITHUB_USER}/${COVER_REPO}@mast
         
         if (title) {
             document.title = title;
-            localStorage.setItem('customTabTitle', title);
+            localStorage.setItem('tabTitle', title);
         }
         
         if (icon) {
@@ -6194,15 +6616,28 @@ const COVER_URL = `https://cdn.jsdelivr.net/gh/${GITHUB_USER}/${COVER_REPO}@mast
                 document.head.appendChild(link);
             }
             link.href = icon;
-            localStorage.setItem('customTabIcon', icon);
+            localStorage.setItem('tabIcon', icon);
         }
         
-        alert('Tab customization applied!');
+        alert('Tab customization saved!');
+    }
+
+    function resetTabCustomization() {
+        document.title = 'Game Launcher';
+        document.getElementById('tabTitleInput').value = '';
+        document.getElementById('tabIconInput').value = '';
+        localStorage.removeItem('tabTitle');
+        localStorage.removeItem('tabIcon');
+        
+        let link = document.querySelector("link[rel*='icon']");
+        if (link) link.remove();
+        
+        alert('Tab customization reset!');
     }
 
     function loadTabCustomization() {
-        const title = localStorage.getItem('customTabTitle');
-        const icon = localStorage.getItem('customTabIcon');
+        const title = localStorage.getItem('tabTitle');
+        const icon = localStorage.getItem('tabIcon');
         
         if (title) {
             document.title = title;
@@ -6210,6 +6645,7 @@ const COVER_URL = `https://cdn.jsdelivr.net/gh/${GITHUB_USER}/${COVER_REPO}@mast
         }
         
         if (icon) {
+            document.getElementById('tabIconInput').value = icon;
             let link = document.querySelector("link[rel*='icon']");
             if (!link) {
                 link = document.createElement('link');
@@ -6217,898 +6653,27 @@ const COVER_URL = `https://cdn.jsdelivr.net/gh/${GITHUB_USER}/${COVER_REPO}@mast
                 document.head.appendChild(link);
             }
             link.href = icon;
-            document.getElementById('tabIconInput').value = icon;
         }
     }
 
-    function resetTabCustomization() {
-        localStorage.removeItem('customTabTitle');
-        localStorage.removeItem('customTabIcon');
-        document.title = 'Game Launcher';
-        document.getElementById('tabTitleInput').value = '';
-        document.getElementById('tabIconInput').value = '';
+    // Notifications System
+    function loadNotifications() {
+        const readNotifs = JSON.parse(localStorage.getItem('readNotifications') || '[]');
+        const unreadCount = NOTIFICATIONS.filter(n => !readNotifs.includes(n.id)).length;
         
-        let link = document.querySelector("link[rel*='icon']");
-        if (link) {
-            link.href = '';
+        if (unreadCount > 0) {
+            document.getElementById('notifBadge').style.display = 'flex';
+            document.getElementById('notifBadge').textContent = unreadCount;
         }
         
-        alert('Tab customization reset!');
-    }
-
-    // Bible verses
-    const verses = [
-        { text: "I can do all things through Christ who strengthens me.", ref: "Philippians 4:13" },
-        { text: "For God so loved the world that he gave his one and only Son.", ref: "John 3:16" },
-        { text: "Trust in the Lord with all your heart.", ref: "Proverbs 3:5" },
-        { text: "The Lord is my shepherd; I shall not want.", ref: "Psalm 23:1" },
-        { text: "Be strong and courageous. Do not be afraid.", ref: "Joshua 1:9" }
-    ];
-
-    function getRandomVerse() {
-        return verses[Math.floor(Math.random() * verses.length)];
-    }
-
-    // Keyboard shortcuts
-    document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape') {
-            const gameContainer = document.getElementById('game-container');
-            if (gameContainer.style.display === 'flex') {
-                closeGame();
-            }
-        }
-        
-        if (e.key === 'F11') {
-            const gameContainer = document.getElementById('game-container');
-            if (gameContainer.style.display === 'flex') {
-                e.preventDefault();
-                toggleFullscreen();
-            }
-        }
-    });
-
-    // Snow animation
-    function createSnowEffect() {
-        const canvas = document.getElementById('snowCanvas');
-        const ctx = canvas.getContext('2d');
-        
-        canvas.width = window.innerWidth;
-        canvas.height = window.innerHeight;
-        
-        const snowflakes = [];
-        const snowCount = 150;
-        const snowSize = 3;
-        const snowSpeed = 1.2;
-        
-        class Snowflake {
-            constructor() {
-                this.reset();
-            }
-            
-            reset() {
-                this.x = Math.random() * canvas.width;
-                this.y = Math.random() * canvas.height - canvas.height;
-                this.size = Math.random() * snowSize + 1;
-                this.speed = Math.random() * snowSpeed + 0.5;
-                this.wind = Math.random() * 0.5 - 0.25;
-            }
-            
-            update() {
-                this.y += this.speed;
-                this.x += this.wind;
-                
-                if (this.y > canvas.height) {
-                    this.reset();
-                    this.y = -10;
-                }
-                
-                if (this.x > canvas.width) {
-                    this.x = 0;
-                } else if (this.x < 0) {
-                    this.x = canvas.width;
-                }
-            }
-            
-            draw() {
-                ctx.fillStyle = '#ffffff';
-                ctx.beginPath();
-                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-                ctx.fill();
-            }
-        }
-        
-        for (let i = 0; i < snowCount; i++) {
-            snowflakes.push(new Snowflake());
-        }
-        
-        function animate() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            snowflakes.forEach(flake => {
-                flake.update();
-                flake.draw();
-            });
-            requestAnimationFrame(animate);
-        }
-        
-        animate();
-        
-        window.addEventListener('resize', () => {
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
-        });
-    }
-
-    createSnowEffect();
-
-    // Tab switching
-    function switchTab(tabName) {
-        document.querySelectorAll('.content').forEach(c => c.classList.remove('active'));
-        document.querySelectorAll('.sidebar-item').forEach(i => i.classList.remove('active'));
-        
-        document.getElementById(tabName).classList.add('active');
-        document.getElementById(tabName + 'Item').classList.add('active');
-        
-        if (tabName === 'proxys' && !proxyUnlocked) {
-            document.getElementById(tabName).innerHTML = '<div class="locked-overlay"><h2>🔒 Locked</h2><p>Type <code>unlockproxy</code> in the search bar to unlock this section.</p></div>';
-        }
-        
-        if (tabName === 'testing' && !testingUnlocked) {
-            document.getElementById(tabName).innerHTML = '<div class="locked-overlay"><h2>🔒 Locked</h2><p>Type <code>unlocktesting</code> in the search bar to unlock this section.</p></div>';
-        }
-    }
-
-    // Unlock features
-    function unlockProxy() {
-        proxyUnlocked = true;
-        localStorage.setItem('proxyUnlocked', 'true');
-        const item = document.getElementById('proxysItem');
-        item.classList.remove('locked');
-        item.innerHTML = '🌐 Proxys<span class="tooltip">Browse proxy files</span>';
-        switchTab('proxys');
-    }
-
-    function unlockTesting() {
-        testingUnlocked = true;
-        localStorage.setItem('testingUnlocked', 'true');
-        const item = document.getElementById('testingItem');
-        item.classList.remove('locked');
-        item.innerHTML = '🧪 Testing<span class="tooltip">Experimental features</span>';
-        switchTab('testing');
-    }
-
-    // Search functionality
-    function filterGames() {
-        const input = document.getElementById('searchInput').value.toLowerCase();
-        
-        if (input === 'unlockproxy') {
-            unlockProxy();
-            document.getElementById('searchInput').value = '';
-            return;
-        }
-        
-        if (input === 'unlocktesting') {
-            unlockTesting();
-            document.getElementById('searchInput').value = '';
-            return;
-        }
-        
-        const filtered = games.filter(g => g.name.toLowerCase().includes(input));
-        
-        if (filtered.length === 0) {
-            document.getElementById('noResults').style.display = 'block';
-            document.getElementById('game-sections').style.display = 'none';
-            document.getElementById('alphabetNav').style.display = 'none';
-        } else {
-            document.getElementById('noResults').style.display = 'none';
-            document.getElementById('game-sections').style.display = 'block';
-            document.getElementById('alphabetNav').style.display = 'flex';
-            renderGameSections(filtered);
-        }
-    }
-
-    function clearSearch() {
-        document.getElementById('searchInput').value = '';
-        document.getElementById('noResults').style.display = 'none';
-        document.getElementById('game-sections').style.display = 'block';
-        document.getElementById('alphabetNav').style.display = 'flex';
-        renderGameSections();
-    }
-
-    // GitHub fetching
-    async function fetchWithFallback(filename) {
-        const urls = [
-            `https://cdn.jsdelivr.net/gh/${GITHUB_USER}/${GITHUB_REPO}@${GITHUB_BRANCH}/${filename}`,
-            `https://raw.githubusercontent.com/${GITHUB_USER}/${GITHUB_REPO}/${GITHUB_BRANCH}/${filename}`,
-            `https://${GITHUB_USER}.github.io/${GITHUB_REPO}/${filename}`
-        ];
-
-        for (let i = 0; i < urls.length; i++) {
-            try {
-                const response = await fetch(urls[i] + `?t=${Date.now()}`);
-                if (response.ok) {
-                    return await response.text();
-                }
-            } catch (err) {
-                if (i === urls.length - 1) throw err;
-            }
-        }
-        throw new Error('All methods failed');
-    }
-
-    async function fetchGames() {
-        // Load games from JSON array
-        games = GAMES_JSON.map(game => ({
-            ...game,
-            // cover is already correct from template literal
-            isExternal: game.url && (game.url.startsWith('http://') || game.url.startsWith('https://'))
-        }));
-
-        console.log(`✓ Loaded ${games.length} games`);
-    }
-
-    async function fetchProxies() {
-        proxies = [
-            { name: "Ultraviolet", path: "prox/ultraviolet.html" },
-            { name: "Unit", path: "Scram.html" }
-        ];
-        console.log(`✓ Loaded ${proxies.length} proxies`);
-    }
-
-    // Render alphabet navigation
-    function renderAlphabetNav() {
-        const container = document.getElementById('alphabetNav');
-        const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
-        const grouped = groupGamesByLetter();
-        
-        container.innerHTML = alphabet.map(letter => {
-            const disabled = !grouped[letter] ? 'disabled' : '';
-            return `<div class="alphabet-letter ${disabled}" onclick="scrollToLetter('${letter}')">${letter}</div>`;
-        }).join('');
-    }
-
-    function scrollToLetter(letter) {
-        const element = document.getElementById(`section-${letter}`);
-        if (element) {
-            element.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        }
-    }
-
-    function groupGamesByLetter(gameList = games) {
-        const grouped = {};
-        gameList.forEach(game => {
-            const first = game.name.charAt(0).toUpperCase();
-            if (!grouped[first]) grouped[first] = [];
-            grouped[first].push(game);
-        });
-        return grouped;
-    }
-
-    function renderGameSections(gameList = games) {
-        const container = document.getElementById('game-sections');
-        const grouped = groupGamesByLetter(gameList);
-        const letters = Object.keys(grouped).sort();
-        
-        if (letters.length === 0) {
-            container.innerHTML = '';
-            return;
-        }
-        
-        container.innerHTML = letters.map(letter => `
-            <div id="section-${letter}">
-                <div class="section-title">📁 ${letter}</div>
-                <div class="game-grid">
-                    ${grouped[letter].map(game => {
-                        const coverImg = game.cover && !game.cover.includes('undefined') 
-                            ? `<img src="${game.cover}" class="game-cover" onerror="this.outerHTML='<div class=\\'game-cover placeholder\\'>🎮</div>'">`
-                            : `<div class="game-cover placeholder">🎮</div>`;
-                        
-                        const author = game.author ? `<div class="game-author">by ${game.author}</div>` : '';
-                        const externalBadge = game.isExternal ? '<div class="external-link-badge">🔗 External</div>' : '';
-                        const action = game.isExternal ? `window.open('${game.url}', '_blank')` : `loadGame('${game.url}', '${game.name.replace(/'/g, "\\'")}')`;
-                        
-                        return `
-                            <div class="game-card" onclick="${action}">
-                                ${externalBadge}
-                                ${coverImg}
-                                <div class="game-info">
-                                    <h3>${game.name}</h3>
-                                    ${author}
-                                    <p>${game.isExternal ? 'Opens in new tab' : 'Click to play'}</p>
-                                </div>
-                            </div>
-                        `;
-                    }).join('')}
-                </div>
-            </div>
-        `).join('');
-        
-        // Update alphabet navigation
-        document.querySelectorAll('.alphabet-letter').forEach(letter => {
-            const letterChar = letter.textContent;
-            if (grouped[letterChar]) {
-                letter.classList.remove('disabled');
-            } else {
-                letter.classList.add('disabled');
-            }
-        });
-        
-        document.getElementById('noResults').style.display = 'none';
-    }
-
-    async function renderProxyItems() {
-        const container = document.getElementById('proxyList');
-        try {
-            await fetchProxies();
-            if (proxies.length === 0) {
-                container.innerHTML = '<p style="color:#666;text-align:center;">No proxy files found.</p>';
-                return;
-            }
-            container.innerHTML = proxies.map(p => `
-                <div class="proxy-item" onclick="loadProxy('${p.path}', '${p.name}')">
-                    ${p.name}
-                </div>`).join('');
-        } catch (e) {
-            console.error(e);
-            container.innerHTML = '<p style="color:#ff0000;text-align:center;">Failed to load proxies.</p>';
-        }
-    }
-
-    // ===== GAME STORAGE PERSISTENCE SYSTEM =====
-    // This system saves game data automatically so player progress isn't lost
-    
-    const STORAGE_PREFIX = 'game_data_';
-    const AUTO_SAVE_INTERVAL = 30000; // Auto-save every 30 seconds
-    let autoSaveTimer = null;
-    
-    // Storage bridge code to inject into games
-    const storageInjectionCode = '<script>' + 
-    '(function() {' +
-        'const gameKey = window.location.pathname + "_" + window.location.search;' +
-        'const storageKey = "game_save_" + btoa(gameKey).replace(/=/g, "");' +
-        '' +
-        '// Load saved data on page load' +
-        'const savedData = localStorage.getItem(storageKey);' +
-        'if (savedData) {' +
-            'try {' +
-                'const parsed = JSON.parse(savedData);' +
-                'Object.keys(parsed).forEach(function(key) {' +
-                    'if (key !== storageKey) {' +
-                        'localStorage.setItem(key, parsed[key]);' +
-                    '}' +
-                '});' +
-                'console.log("[Storage Bridge] Game data restored");' +
-            '} catch (e) {' +
-                'console.warn("[Storage Bridge] Failed to restore data:", e);' +
-            '}' +
-        '}' +
-        '' +
-        '// Override localStorage.setItem to auto-save' +
-        'const originalSetItem = localStorage.setItem;' +
-        'localStorage.setItem = function(key, value) {' +
-            'originalSetItem.call(localStorage, key, value);' +
-            'const allData = {};' +
-            'for (let i = 0; i < localStorage.length; i++) {' +
-                'const k = localStorage.key(i);' +
-                'if (k && !k.startsWith("game_save_")) {' +
-                    'allData[k] = localStorage.getItem(k);' +
-                '}' +
-            '}' +
-            'originalSetItem.call(localStorage, storageKey, JSON.stringify(allData));' +
-        '};' +
-        '' +
-        '// Also handle sessionStorage' +
-        'const sessionKey = "game_session_" + btoa(gameKey).replace(/=/g, "");' +
-        'const savedSession = sessionStorage.getItem(sessionKey);' +
-        'if (savedSession) {' +
-            'try {' +
-                'const parsed = JSON.parse(savedSession);' +
-                'Object.keys(parsed).forEach(function(key) {' +
-                    'if (key !== sessionKey) {' +
-                        'sessionStorage.setItem(key, parsed[key]);' +
-                    '}' +
-                '});' +
-            '} catch (e) {}' +
-        '}' +
-        '' +
-        'const originalSessionSetItem = sessionStorage.setItem;' +
-        'sessionStorage.setItem = function(key, value) {' +
-            'originalSessionSetItem.call(sessionStorage, key, value);' +
-            'const allData = {};' +
-            'for (let i = 0; i < sessionStorage.length; i++) {' +
-                'const k = sessionStorage.key(i);' +
-                'if (k && !k.startsWith("game_session_")) {' +
-                    'allData[k] = sessionStorage.getItem(k);' +
-                '}' +
-            '}' +
-            'originalSessionSetItem.call(sessionStorage, sessionKey, JSON.stringify(allData));' +
-        '};' +
-        '' +
-        '// Periodic auto-save' +
-        'setInterval(function() {' +
-            'const allData = {};' +
-            'for (let i = 0; i < localStorage.length; i++) {' +
-                'const k = localStorage.key(i);' +
-                'if (k && !k.startsWith("game_save_")) {' +
-                    'allData[k] = localStorage.getItem(k);' +
-                '}' +
-            '}' +
-            'if (Object.keys(allData).length > 0) {' +
-                'localStorage.setItem(storageKey, JSON.stringify(allData));' +
-            '}' +
-        '}, 5000);' +
-        '' +
-        'console.log("[Storage Bridge] Initialized for game");' +
-    '})();' +
-    '</' + 'script>';
-    
-    // Show save notification
-    function showSaveNotification(message = '💾 Game Progress Saved!', isAuto = false) {
-        const notification = document.getElementById('saveNotification');
-        notification.textContent = message;
-        notification.classList.add('show');
-        
-        setTimeout(() => {
-            notification.style.animation = 'slideOut 0.3s ease-out';
-            setTimeout(() => {
-                notification.classList.remove('show');
-                notification.style.animation = '';
-            }, 300);
-        }, isAuto ? 2000 : 3000);
-    }
-    
-    // Save game state manually
-    function saveGameState() {
-        const frame = document.getElementById('game-frame');
-        if (!frame || !frame.contentWindow) {
-            alert('No game is currently loaded');
-            return;
-        }
-        
-        try {
-            // Trigger a manual save in the iframe
-            const frameWindow = frame.contentWindow;
-            const gameKey = frameWindow.location.pathname + '_' + frameWindow.location.search;
-            const storageKey = 'game_save_' + btoa(gameKey).replace(/=/g, '');
-            
-            // Collect all localStorage data from the iframe
-            const allData = {};
-            const frameStorage = frameWindow.localStorage;
-            for (let i = 0; i < frameStorage.length; i++) {
-                const key = frameStorage.key(i);
-                if (key && !key.startsWith('game_save_')) {
-                    allData[key] = frameStorage.getItem(key);
-                }
-            }
-            
-            if (Object.keys(allData).length > 0) {
-                frameStorage.setItem(storageKey, JSON.stringify(allData));
-                
-                // Also save to parent window's localStorage as backup
-                const backupKey = STORAGE_PREFIX + currentGame.filename;
-                localStorage.setItem(backupKey, JSON.stringify(allData));
-                
-                // Show save button feedback
-                const saveBtn = document.getElementById('saveBtn');
-                const originalText = saveBtn.textContent;
-                saveBtn.textContent = '✓ Saved!';
-                saveBtn.style.background = '#00ff00';
-                setTimeout(() => {
-                    saveBtn.textContent = originalText;
-                    saveBtn.style.background = '';
-                }, 2000);
-                
-                // Show notification
-                showSaveNotification('💾 Game Progress Saved!', false);
-                
-                console.log('Game state saved successfully');
-            } else {
-                alert('No game data to save yet. Play the game first!');
-            }
-        } catch (e) {
-            console.error('Save failed:', e);
-            alert('Could not save game data. Make sure the game has started.');
-        }
-    }
-    
-    // Auto-save functionality
-    function startAutoSave() {
-        if (autoSaveTimer) clearInterval(autoSaveTimer);
-        
-        autoSaveTimer = setInterval(() => {
-            const frame = document.getElementById('game-frame');
-            if (frame && frame.contentWindow && currentGame.filename) {
-                try {
-                    // Do the save
-                    const frameWindow = frame.contentWindow;
-                    const gameKey = frameWindow.location.pathname + '_' + frameWindow.location.search;
-                    const storageKey = 'game_save_' + btoa(gameKey).replace(/=/g, '');
-                    
-                    const allData = {};
-                    const frameStorage = frameWindow.localStorage;
-                    for (let i = 0; i < frameStorage.length; i++) {
-                        const key = frameStorage.key(i);
-                        if (key && !key.startsWith('game_save_')) {
-                            allData[key] = frameStorage.getItem(key);
-                        }
-                    }
-                    
-                    if (Object.keys(allData).length > 0) {
-                        frameStorage.setItem(storageKey, JSON.stringify(allData));
-                        const backupKey = STORAGE_PREFIX + currentGame.filename;
-                        localStorage.setItem(backupKey, JSON.stringify(allData));
-                        
-                        // Show auto-save notification
-                        showSaveNotification('💾 Auto-Saved!', true);
-                        console.log('Auto-save completed');
-                    }
-                } catch (e) {
-                    console.log('Auto-save skipped:', e.message);
-                }
-            }
-        }, AUTO_SAVE_INTERVAL);
-    }
-    
-    function stopAutoSave() {
-        if (autoSaveTimer) {
-            clearInterval(autoSaveTimer);
-            autoSaveTimer = null;
-        }
-    }
-
-    // Game loading
-    async function loadGame(filename, title) {
-        currentGame = { filename, title };
-        const loader = document.getElementById('game-loader');
-        const container = document.getElementById('game-container');
-        const frame = document.getElementById('game-frame');
-        const gameTitle = document.getElementById('currentGameTitle');
-
-        const verse = getRandomVerse();
-        document.getElementById('verseText').textContent = '"' + verse.text + '"';
-        document.getElementById('verseReference').textContent = '- ' + verse.ref;
-
-        loader.style.display = 'flex';
-        container.style.display = 'none';
-
-        try {
-            const html = await fetchWithFallback(filename);
-            const gameFolder = filename.substring(0, filename.lastIndexOf('/') + 1);
-            const baseUrl = 'https://cdn.jsdelivr.net/gh/' + GITHUB_USER + '/' + GITHUB_REPO + '@' + GITHUB_BRANCH + '/' + gameFolder;
-            
-            let modifiedHtml = html;
-            if (!modifiedHtml.includes('<base')) {
-                modifiedHtml = modifiedHtml.replace('<head>', '<head><base href="' + baseUrl + '">');
-            }
-            
-            // Inject storage persistence code
-            if (modifiedHtml.includes('</head>')) {
-                modifiedHtml = modifiedHtml.replace('</head>', storageInjectionCode + '</head>');
-            } else if (modifiedHtml.includes('<body')) {
-                modifiedHtml = modifiedHtml.replace('<body', storageInjectionCode + '<body');
-            }
-            
-            setTimeout(function() {
-                gameTitle.textContent = title;
-                const blob = new Blob([modifiedHtml], { type: 'text/html' });
-                const blobUrl = URL.createObjectURL(blob);
-                frame.src = blobUrl;
-                frame.onload = function() { 
-                    console.log('Game loaded with storage bridge');
-                    startAutoSave(); // Start auto-saving
-                };
-                loader.style.display = 'none';
-                container.style.display = 'flex';
-            }, 5000);
-        } catch (err) {
-            loader.style.display = 'none';
-            alert('Failed to load game: ' + err.message);
-            console.error(err);
-        }
-    }
-
-    async function loadProxy(filepath, title) {
-        currentGame = { filename: filepath, title };
-        const loader = document.getElementById('game-loader');
-        const container = document.getElementById('game-container');
-        const frame = document.getElementById('game-frame');
-        const gameTitle = document.getElementById('currentGameTitle');
-
-        const verse = getRandomVerse();
-        document.getElementById('verseText').textContent = '"' + verse.text + '"';
-        document.getElementById('verseReference').textContent = '- ' + verse.ref;
-
-        loader.style.display = 'flex';
-        container.style.display = 'none';
-
-        try {
-            const html = await fetchWithFallback(filepath);
-            const gameFolder = filepath.substring(0, filepath.lastIndexOf('/') + 1);
-            const baseUrl = 'https://cdn.jsdelivr.net/gh/' + GITHUB_USER + '/' + GITHUB_REPO + '@' + GITHUB_BRANCH + '/' + gameFolder;
-            
-            let modifiedHtml = html;
-            if (!modifiedHtml.includes('<base')) {
-                modifiedHtml = modifiedHtml.replace('<head>', '<head><base href="' + baseUrl + '">');
-            }
-            
-            // Inject storage persistence code
-            if (modifiedHtml.includes('</head>')) {
-                modifiedHtml = modifiedHtml.replace('</head>', storageInjectionCode + '</head>');
-            } else if (modifiedHtml.includes('<body')) {
-                modifiedHtml = modifiedHtml.replace('<body', storageInjectionCode + '<body');
-            }
-            
-            setTimeout(function() {
-                gameTitle.textContent = title;
-                const blob = new Blob([modifiedHtml], { type: 'text/html' });
-                const blobUrl = URL.createObjectURL(blob);
-                frame.src = blobUrl;
-                frame.onload = function() { 
-                    console.log('Proxy loaded with storage bridge');
-                    startAutoSave(); // Start auto-saving
-                };
-                loader.style.display = 'none';
-                container.style.display = 'flex';
-            }, 5000);
-        } catch (err) {
-            loader.style.display = 'none';
-            alert('Failed to load proxy: ' + err.message);
-            console.error(err);
-        }
-    }
-
-    function reloadGame() {
-        if (currentGame.filename) {
-            if (currentGame.filename.includes('prox/')) {
-                loadProxy(currentGame.filename, currentGame.title);
-            } else {
-                loadGame(currentGame.filename, currentGame.title);
-            }
-        }
-    }
-
-    function toggleFullscreen() {
-        const gameContainer = document.getElementById('game-container');
-        const gameFrame = document.getElementById('game-frame');
-        const btn = document.getElementById('fullscreenBtn');
-        const hint = document.getElementById('fullscreenHint');
-
-        if (!document.fullscreenElement && !document.webkitFullscreenElement &&
-            !document.mozFullScreenElement && !document.msFullscreenElement) {
-            
-            // Try to fullscreen the container (this will hide the header via CSS)
-            const requestFullscreen = gameContainer.requestFullscreen || 
-                                     gameContainer.webkitRequestFullscreen || 
-                                     gameContainer.mozRequestFullScreen || 
-                                     gameContainer.msRequestFullscreen;
-            
-            if (requestFullscreen) {
-                requestFullscreen.call(gameContainer).then(() => {
-                    // Fullscreen successful
-                    btn.textContent = '⛶ Exit Fullscreen';
-                    hint.classList.add('show');
-                    setTimeout(() => hint.classList.remove('show'), 3000);
-                }).catch(err => {
-                    console.error('Fullscreen failed:', err);
-                    alert('Fullscreen failed. Try using F11 or the game\'s built-in fullscreen button.');
-                });
-            }
-        } else {
-            const exitFullscreen = document.exitFullscreen || 
-                                  document.webkitExitFullscreen || 
-                                  document.mozCancelFullScreen || 
-                                  document.msExitFullscreen;
-            
-            if (exitFullscreen) {
-                exitFullscreen.call(document);
-                btn.textContent = '⛶ Fullscreen';
-            }
-        }
-    }
-
-    document.addEventListener('fullscreenchange', updateFullscreenButton);
-    document.addEventListener('webkitfullscreenchange', updateFullscreenButton);
-    document.addEventListener('mozfullscreenchange', updateFullscreenButton);
-    document.addEventListener('MSFullscreenChange', updateFullscreenButton);
-
-    function updateFullscreenButton() {
-        const btn = document.getElementById('fullscreenBtn');
-        const inFull = document.fullscreenElement || document.webkitFullscreenElement ||
-                        document.mozFullScreenElement || document.msFullscreenElement;
-        btn.textContent = inFull ? '⛶ Exit Fullscreen' : '⛶ Fullscreen';
-    }
-
-    function closeGame() {
-        // Save one last time before closing
-        try {
-            saveGameState();
-        } catch (e) {
-            console.log('Final save skipped:', e.message);
-        }
-        
-        // Stop auto-saving
-        stopAutoSave();
-        
-        if (document.fullscreenElement || document.webkitFullscreenElement ||
-            document.mozFullScreenElement || document.msFullscreenElement) {
-            if (document.exitFullscreen) document.exitFullscreen();
-            else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
-            else if (document.mozCancelFullScreen) document.mozCancelFullScreen();
-            else if (document.msExitFullscreen) document.msExitFullscreen();
-        }
-
-        document.getElementById('game-container').style.display = 'none';
-        document.getElementById('game-frame').src = '';
-        currentGame = { filename: '', title: '' };
-    }
-
-    // Initialization
-    async function initializeLauncher() {
-        const loader = document.getElementById('initial-loader');
-        const main = document.getElementById('main-content');
-        const gameCount = document.getElementById('gameCount');
-        const loadingText = loader.querySelector('.loading-text');
-
-        // Apply saved theme
-        applyTheme(currentTheme);
-        renderThemeGrid();
-        
-        // Load saved teacher link
-        loadTeacherLink();
-
-        // Load saved tab customization
-        loadTabCustomization();
-
-        try {
-            await fetchGames();
-            gameCount.textContent = `${games.length} Games Found!`;
-            loadingText.textContent = 'Loading games - use this wisely mostly during free time or lunch';
-
-            setTimeout(() => {
-                renderAlphabetNav();
-                renderGameSections();
-                loader.style.display = 'none';
-                main.style.display = 'block';
-            }, 1500);
-        } catch (e) {
-            loadingText.textContent = 'Error loading games';
-            gameCount.innerHTML = '<span style="color:#ff0000;">Failed to load games. Check configuration.</span>';
-            console.error(e);
-            setTimeout(() => {
-                loader.style.display = 'none';
-                main.style.display = 'block';
-            }, 2000);
-        }
-    }
-
-    document.getElementById('proxysItem').addEventListener('click', () => {
-        if (proxyUnlocked) renderProxyItems();
-    });
-
-    if (proxyUnlocked) {
-        const proxyItem = document.getElementById('proxysItem');
-        proxyItem.classList.remove('locked');
-        proxyItem.innerHTML = '🌐 Proxys<span class="tooltip">Browse proxy files</span>';
-    }
-    
-    if (testingUnlocked) {
-        const testingItem = document.getElementById('testingItem');
-        testingItem.classList.remove('locked');
-        testingItem.innerHTML = '🧪 Testing<span class="tooltip">Experimental features</span>';
-    }
-
-    // ===== NOTIFICATION SYSTEM =====
-    // Edit this array to add new notifications - they will automatically appear for users!
-   const NOTIFICATIONS = [
-    {
-        id: 'notif_20251210_003',
-        title: 'New Small Updates',
-        description: 'Added notification system and custom background uploader!',
-        fullContent: 'Hey everyone! Just pushed some small but useful updates:\n\n• Added a brand new notification/update system! Now you can easily see what\'s new in the launcher.\n\n• Added a custom background uploader! You can now personalize your launcher with your own background images. Just head to Settings to try it out!\n\nMore updates coming soon!',
-        type: 'update',
-        date: 'December 10, 2025',
-        timestamp: new Date('2025-12-10').getTime()
-    }
-    // Add more notifications here as you release updates!
-];
-
-    const NOTIFICATION_STORAGE_KEY = 'launcher_notifications_read';
-    const NOTIFICATION_VERSION_KEY = 'launcher_notification_version';
-    const CURRENT_NOTIFICATION_VERSION = '1.0'; // Increment this to force re-show all notifications
-
-    // Get read notifications from localStorage
-    function getReadNotifications() {
-        try {
-            const stored = localStorage.getItem(NOTIFICATION_STORAGE_KEY);
-            return stored ? JSON.parse(stored) : [];
-        } catch (e) {
-            return [];
-        }
-    }
-
-    // Save read notification
-    function markNotificationAsRead(notifId) {
-        const read = getReadNotifications();
-        if (!read.includes(notifId)) {
-            read.push(notifId);
-            localStorage.setItem(NOTIFICATION_STORAGE_KEY, JSON.stringify(read));
-        }
-        updateNotificationBadge();
-    }
-
-    // Mark all as read
-    function markAllAsRead() {
-        const allIds = NOTIFICATIONS.map(n => n.id);
-        localStorage.setItem(NOTIFICATION_STORAGE_KEY, JSON.stringify(allIds));
-        updateNotificationBadge();
         renderNotifications();
     }
 
-    // Get unread count
-    function getUnreadCount() {
-        const read = getReadNotifications();
-        return NOTIFICATIONS.filter(n => !read.includes(n.id)).length;
-    }
-
-    // Update badge
-    function updateNotificationBadge() {
-        const badge = document.getElementById('notifBadge');
-        const count = getUnreadCount();
-        
-        if (count > 0) {
-            badge.textContent = count;
-            badge.style.display = 'flex';
-        } else {
-            badge.style.display = 'none';
-        }
-    }
-
-    // Toggle notifications panel
-    function toggleNotifications() {
-        const panel = document.getElementById('notificationsPanel');
-        const overlay = document.getElementById('notificationsOverlay');
-        
-        if (panel.classList.contains('open')) {
-            panel.classList.remove('open');
-            overlay.classList.remove('active');
-        } else {
-            panel.classList.add('open');
-            overlay.classList.add('active');
-            renderNotifications();
-        }
-    }
-
-    // Expand/collapse notification
-    function toggleNotificationExpand(notifId) {
-        const item = document.getElementById(`notif-${notifId}`);
-        if (item) {
-            item.classList.toggle('expanded');
-            markNotificationAsRead(notifId);
-        }
-    }
-
-    // Calculate relative time
-    function getRelativeTime(timestamp) {
-        const now = Date.now();
-        const diff = now - timestamp;
-        const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-        
-        if (days === 0) return 'Today';
-        if (days === 1) return '1 day ago';
-        if (days < 7) return `${days} days ago`;
-        if (days < 30) return `${Math.floor(days / 7)} week(s) ago`;
-        if (days < 365) return `${Math.floor(days / 30)} month(s) ago`;
-        return `${Math.floor(days / 365)} year(s) ago`;
-    }
-
-    // Render notifications
     function renderNotifications() {
         const container = document.getElementById('notificationsContent');
-        const read = getReadNotifications();
+        const readNotifs = JSON.parse(localStorage.getItem('readNotifications') || '[]');
         
-        // Sort by date (newest first)
-        const sortedNotifications = [...NOTIFICATIONS].sort((a, b) => b.timestamp - a.timestamp);
-        
-        if (sortedNotifications.length === 0) {
+        if (NOTIFICATIONS.length === 0) {
             container.innerHTML = `
                 <div class="notifications-empty">
                     <h3>📭 No Notifications</h3>
@@ -7118,74 +6683,156 @@ const COVER_URL = `https://cdn.jsdelivr.net/gh/${GITHUB_USER}/${COVER_REPO}@mast
             return;
         }
         
-        container.innerHTML = sortedNotifications.map(notif => {
-            const isRead = read.includes(notif.id);
-            const typeClass = notif.type || 'update';
-            const typeLabel = typeClass.charAt(0).toUpperCase() + typeClass.slice(1);
-            const relativeTime = getRelativeTime(notif.timestamp);
+        container.innerHTML = '';
+        
+        NOTIFICATIONS.forEach(notif => {
+            const isUnread = !readNotifs.includes(notif.id);
+            const div = document.createElement('div');
+            div.className = `notification-item ${isUnread ? 'unread' : ''}`;
+            div.id = `notif-${notif.id}`;
             
-            return `
-                <div class="notification-item ${isRead ? '' : 'unread'}" id="notif-${notif.id}">
-                    <div class="notification-header-content">
-                        <h3 class="notification-title">${notif.title}</h3>
-                        <div class="notification-type ${typeClass}">
-                            <span class="notification-type-dot"></span>
-                            ${typeLabel}
-                        </div>
+            div.innerHTML = `
+                <div class="notification-header-content">
+                    <h3 class="notification-title">${notif.title}</h3>
+                    <div class="notification-type ${notif.type}">
+                        <span class="notification-type-dot"></span>
+                        ${notif.type.toUpperCase()}
                     </div>
-                    <div class="notification-description">${notif.description}</div>
-                    ${notif.fullContent ? `
-                        <div class="notification-expand" onclick="toggleNotificationExpand('${notif.id}')">
-                            <span class="notification-expand-icon">▶</span> Read more
-                        </div>
-                        <div class="notification-full-content">
-                            ${notif.fullContent.replace(/\n/g, '<br>')}
-                        </div>
-                    ` : ''}
-                    <div class="notification-date">📅 ${notif.date} • ${relativeTime}</div>
+                </div>
+                <p class="notification-description">${notif.description}</p>
+                ${notif.fullContent ? `
+                    <div class="notification-expand" onclick="toggleNotificationExpand('${notif.id}')">
+                        <span>Read more</span>
+                        <span class="notification-expand-icon">▶</span>
+                    </div>
+                    <div class="notification-full-content">${notif.fullContent.replace(/\n/g, '<br>')}</div>
+                ` : ''}
+                <div class="notification-date">
+                    📅 ${notif.date}
                 </div>
             `;
-        }).join('');
-        
-        updateNotificationBadge();
+            
+            div.onclick = (e) => {
+                if (!e.target.closest('.notification-expand')) {
+                    markNotificationAsRead(notif.id);
+                }
+            };
+            
+            container.appendChild(div);
+        });
     }
 
-    // Check notification version and reset if needed
-    function checkNotificationVersion() {
-        const storedVersion = localStorage.getItem(NOTIFICATION_VERSION_KEY);
-        if (storedVersion !== CURRENT_NOTIFICATION_VERSION) {
-            // New version - clear read notifications to show updates again
-            localStorage.removeItem(NOTIFICATION_STORAGE_KEY);
-            localStorage.setItem(NOTIFICATION_VERSION_KEY, CURRENT_NOTIFICATION_VERSION);
+    function toggleNotifications() {
+        const panel = document.getElementById('notificationsPanel');
+        const overlay = document.getElementById('notificationsOverlay');
+        
+        panel.classList.toggle('open');
+        overlay.classList.toggle('active');
+    }
+
+    function markNotificationAsRead(notifId) {
+        const readNotifs = JSON.parse(localStorage.getItem('readNotifications') || '[]');
+        if (!readNotifs.includes(notifId)) {
+            readNotifs.push(notifId);
+            localStorage.setItem('readNotifications', JSON.stringify(readNotifs));
+            
+            const notifElement = document.getElementById(`notif-${notifId}`);
+            if (notifElement) {
+                notifElement.classList.remove('unread');
+            }
+            
+            updateBadgeCount();
         }
     }
 
-    // Initialize notifications on page load
-    checkNotificationVersion();
-    updateNotificationBadge();
+    function markAllAsRead() {
+        const allIds = NOTIFICATIONS.map(n => n.id);
+        localStorage.setItem('readNotifications', JSON.stringify(allIds));
+        
+        document.querySelectorAll('.notification-item').forEach(item => {
+            item.classList.remove('unread');
+        });
+        
+        updateBadgeCount();
+    }
 
-    initializeLauncher();
+    function updateBadgeCount() {
+        const readNotifs = JSON.parse(localStorage.getItem('readNotifications') || '[]');
+        const unreadCount = NOTIFICATIONS.filter(n => !readNotifs.includes(n.id)).length;
+        
+        const badge = document.getElementById('notifBadge');
+        if (unreadCount > 0) {
+            badge.style.display = 'flex';
+            badge.textContent = unreadCount;
+        } else {
+            badge.style.display = 'none';
+        }
+    }
+
+    function toggleNotificationExpand(notifId) {
+        const notif = document.getElementById(`notif-${notifId}`);
+        notif.classList.toggle('expanded');
+    }
+
+    // Snow Effect
+    function initSnowEffect() {
+        const canvas = document.getElementById('snowCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        
+        const snowflakes = [];
+        const snowCount = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--snowCount'));
+        
+        for (let i = 0; i < snowCount; i++) {
+            snowflakes.push({
+                x: Math.random() * canvas.width,
+                y: Math.random() * canvas.height,
+                radius: Math.random() * 3 + 1,
+                speed: Math.random() * 1 + 0.5,
+                wind: Math.random() * 0.5 - 0.25
+            });
+        }
+        
+        function drawSnow() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--snowColor');
+            
+            snowflakes.forEach(flake => {
+                ctx.beginPath();
+                ctx.arc(flake.x, flake.y, flake.radius, 0, Math.PI * 2);
+                ctx.fill();
+                
+                flake.y += flake.speed;
+                flake.x += flake.wind;
+                
+                if (flake.y > canvas.height) {
+                    flake.y = 0;
+                    flake.x = Math.random() * canvas.width;
+                }
+                
+                if (flake.x > canvas.width) {
+                    flake.x = 0;
+                } else if (flake.x < 0) {
+                    flake.x = canvas.width;
+                }
+            });
+            
+            requestAnimationFrame(drawSnow);
+        }
+        
+        drawSnow();
+        
+        window.addEventListener('resize', () => {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        });
+    }
+
+    // Start
+    window.onload = initializeLauncher;
 </script>
-
-<!-- Notifications Panel -->
-<div id="notificationsPanel" class="notifications-panel">
-    <div class="notifications-header">
-        <h2>🔔 Updates</h2>
-        <div class="notifications-actions">
-            <button class="notif-btn" onclick="markAllAsRead()">Mark all read</button>
-            <button class="notif-btn close-btn" onclick="toggleNotifications()">✖</button>
-        </div>
-    </div>
-    <div class="notifications-content" id="notificationsContent">
-        <!-- Notifications will be inserted here -->
-    </div>
-</div>
-<div id="notificationsOverlay" class="notifications-overlay" onclick="toggleNotifications()"></div>
-
-<!-- Save Notification -->
-<div id="saveNotification" class="save-notification">
-    💾 Game Progress Auto-Saved!
-</div>
-
 </body>
 </html>
+
