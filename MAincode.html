@@ -287,9 +287,46 @@
             margin-bottom: 30px;
             flex-wrap: wrap;
             justify-content: center;
+            position: relative;
         }
 
-        .search-box, .select-box {
+        .search-container {
+            position: relative;
+            width: 300px;
+        }
+
+        .search-box {
+            padding: 12px 20px;
+            padding-right: 40px;
+            border: 2px solid var(--accent);
+            border-radius: 10px;
+            background: var(--cardBg);
+            color: var(--text);
+            font-size: 16px;
+            transition: all 0.3s;
+            width: 100%;
+        }
+
+        .clear-search-btn {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: transparent;
+            border: none;
+            color: var(--muted);
+            cursor: pointer;
+            font-size: 18px;
+            padding: 5px;
+            display: none;
+            transition: color 0.3s;
+        }
+
+        .clear-search-btn:hover {
+            color: var(--accent);
+        }
+
+        .select-box {
             padding: 12px 20px;
             border: 2px solid var(--accent);
             border-radius: 10px;
@@ -297,6 +334,7 @@
             color: var(--text);
             font-size: 16px;
             transition: all 0.3s;
+            min-width: 200px;
         }
 
         .search-box:focus, .select-box:focus {
@@ -1051,8 +1089,13 @@
                 width: 100%;
             }
 
-            .search-box, .select-box {
+            .search-container, .select-box {
                 width: 100%;
+            }
+            
+            .search-container {
+                width: 100%;
+                max-width: 100%;
             }
         }
 
@@ -1120,7 +1163,10 @@
         </div>
 
         <div class="controls">
-            <input type="text" class="search-box" id="searchBox" placeholder="🔍 Search games...">
+            <div class="search-container">
+                <input type="text" class="search-box" id="searchBox" placeholder="🔍 Search games...">
+                <button class="clear-search-btn" id="clearSearchBtn">✖</button>
+            </div>
             <select class="select-box" id="sortSelect">
                 <option value="alphabetical">A-Z</option>
                 <option value="recent">Recently Added</option>
@@ -1261,6 +1307,135 @@
 </div>
 <div id="notificationsOverlay" class="notifications-overlay" onclick="closeAllPanels()"></div>
 
+<script>
+// Search functionality
+document.addEventListener('DOMContentLoaded', function() {
+    const searchBox = document.getElementById('searchBox');
+    const clearSearchBtn = document.getElementById('clearSearchBtn');
+    const noResults = document.getElementById('noResults');
+    const alphabetNav = document.getElementById('alphabetNav');
+    
+    if (!searchBox) return;
+    
+    // Function to perform search
+    function performSearch() {
+        const searchTerm = searchBox.value.toLowerCase().trim();
+        const gameCards = document.querySelectorAll('.game-card');
+        let foundResults = false;
+        
+        if (searchTerm === '') {
+            // If search is empty, show all games
+            gameCards.forEach(card => {
+                card.style.display = 'flex';
+                const parentSection = card.closest('.game-section, .games-grid');
+                if (parentSection) {
+                    parentSection.style.display = 'block';
+                }
+            });
+            
+            // Show all alphabet letters
+            const alphabetLetters = document.querySelectorAll('.alphabet-letter');
+            alphabetLetters.forEach(letter => {
+                letter.style.display = 'flex';
+            });
+            
+            noResults.style.display = 'none';
+            clearSearchBtn.style.display = 'none';
+            return;
+        }
+        
+        // Show clear button
+        clearSearchBtn.style.display = 'block';
+        
+        // Hide all alphabet letters during search
+        const alphabetLetters = document.querySelectorAll('.alphabet-letter');
+        alphabetLetters.forEach(letter => {
+            letter.style.display = 'none';
+        });
+        
+        // Search through all game cards
+        gameCards.forEach(card => {
+            const gameTitleElement = card.querySelector('.game-info h3');
+            const gameDescriptionElement = card.querySelector('.game-info p');
+            const gameAuthorElement = card.querySelector('.game-author');
+            
+            if (!gameTitleElement) return;
+            
+            const gameTitle = gameTitleElement.textContent.toLowerCase();
+            const gameDescription = gameDescriptionElement ? gameDescriptionElement.textContent.toLowerCase() : '';
+            const gameAuthor = gameAuthorElement ? gameAuthorElement.textContent.toLowerCase() : '';
+            
+            // Check if game matches search term
+            if (gameTitle.includes(searchTerm) || 
+                gameDescription.includes(searchTerm) || 
+                gameAuthor.includes(searchTerm)) {
+                card.style.display = 'flex';
+                const parentSection = card.closest('.game-section, .games-grid');
+                if (parentSection) {
+                    parentSection.style.display = 'block';
+                }
+                foundResults = true;
+            } else {
+                card.style.display = 'none';
+                // Hide parent section if all cards are hidden
+                const parentSection = card.closest('.game-section, .games-grid');
+                if (parentSection) {
+                    const visibleCards = parentSection.querySelectorAll('.game-card[style*="display: flex"], .game-card:not([style*="display: none"])');
+                    if (visibleCards.length === 0) {
+                        parentSection.style.display = 'none';
+                    }
+                }
+            }
+        });
+        
+        // Show/hide "no results" message
+        if (foundResults) {
+            noResults.style.display = 'none';
+        } else {
+            noResults.style.display = 'block';
+            // Hide all sections if no results
+            document.querySelectorAll('.game-section, .games-grid').forEach(section => {
+                section.style.display = 'none';
+            });
+        }
+    }
+    
+    // Add input event listener for real-time search
+    searchBox.addEventListener('input', performSearch);
+    
+    // Add keydown event for Enter key
+    searchBox.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') {
+            performSearch();
+            e.preventDefault();
+        }
+    });
+    
+    // Clear search functionality
+    clearSearchBtn.addEventListener('click', function() {
+        searchBox.value = '';
+        performSearch();
+        searchBox.focus();
+    });
+    
+    // Also clear search when clicking on sidebar items
+    const sidebarItems = document.querySelectorAll('.sidebar-item');
+    sidebarItems.forEach(item => {
+        item.addEventListener('click', function() {
+            if (searchBox.value.trim() !== '') {
+                searchBox.value = '';
+                performSearch();
+                clearSearchBtn.style.display = 'none';
+            }
+        });
+    });
+    
+    // Initial check for clear button visibility
+    if (searchBox.value.trim() !== '') {
+        clearSearchBtn.style.display = 'block';
+    }
+});
+</script>
 
 <script>
 // Dynamically load script.js with fallback support
