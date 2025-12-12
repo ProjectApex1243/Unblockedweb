@@ -5776,6 +5776,7 @@ function toggleSettings() {
     const notifPanel = document.getElementById('notificationsPanel');
     const overlay = document.getElementById('notificationsOverlay');
     
+    // Always close notifications when opening settings
     notifPanel.classList.remove('open');
     
     if (panel.classList.contains('open')) {
@@ -5867,6 +5868,16 @@ function manualSave() {
     setTimeout(() => notification.classList.remove('show'), 3000);
 }
 
+function closeAllPanels() {
+    const settingsPanel = document.getElementById('settingsPanel');
+    const notifPanel = document.getElementById('notificationsPanel');
+    const overlay = document.getElementById('notificationsOverlay');
+    
+    settingsPanel.classList.remove('open');
+    notifPanel.classList.remove('open');
+    overlay.classList.remove('active');
+}
+
 // Load custom background on page load
 const savedBg = localStorage.getItem('customBackground');
 if (savedBg) {
@@ -5921,6 +5932,8 @@ window.saveTeacherLink = saveTeacherLink;
 window.saveTabCustomization = saveTabCustomization;
 window.resetTabCustomization = resetTabCustomization;
 window.manualSave = manualSave;
+window.closeAllPanels = closeAllPanels;
+window.closeAllPanels = closeAllPanels;
 
 // Debug: Test if loadGame is accessible
 console.log('window.loadGame exists:', typeof window.loadGame);
