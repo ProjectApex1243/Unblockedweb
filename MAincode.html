@@ -1239,7 +1239,29 @@
 <div id="notificationsOverlay" class="notifications-overlay" onclick="toggleNotifications()"></div>
 
 
-<script src="script.js"></script>
+<script>
+// Dynamically load script.js with fallback support
+(function() {
+    const script = document.createElement('script');
+    
+    // Try loading from same directory first (works locally and on GitHub Pages)
+    script.src = './script.js';
+    
+    script.onerror = function() {
+        console.warn('Failed to load ./script.js, trying CDN...');
+        // Fallback to CDN if local fails
+        const cdnScript = document.createElement('script');
+        cdnScript.src = 'https://cdn.jsdelivr.net/gh/ProjectApex1243/Unblockedweb@master/script.js';
+        cdnScript.onerror = function() {
+            console.error('Failed to load script.js from both local and CDN!');
+            alert('Failed to load game launcher. Please check your internet connection.');
+        };
+        document.body.appendChild(cdnScript);
+    };
+    
+    document.body.appendChild(script);
+})();
+</script>
 
 </body>
 </html>
