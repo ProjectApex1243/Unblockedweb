@@ -29,6 +29,7 @@
             --snowCount: 150;
             --snowSize: 3;
             --snowSpeed: 1.2;
+            --snowEnabled: 1;
         }
 
         body {
@@ -49,6 +50,11 @@
             pointer-events: none;
             z-index: -1;
             mix-blend-mode: screen;
+            display: block;
+        }
+
+        #snowCanvas.hidden {
+            display: none;
         }
 
         .sidebar {
@@ -506,7 +512,6 @@
             margin-bottom: 20px;
             margin-top: 30px;
         }
-
 
         .game-title {
             font-size: 18px;
@@ -1052,6 +1057,64 @@
             transform: translateY(0);
         }
 
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 30px;
+            margin-right: 10px;
+            vertical-align: middle;
+        }
+
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 34px;
+            border: 2px solid var(--accent);
+        }
+
+        .toggle-slider:before {
+            position: absolute;
+            content: "";
+            height: 22px;
+            width: 22px;
+            left: 4px;
+            bottom: 2px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked + .toggle-slider {
+            background-color: var(--accent);
+        }
+
+        input:checked + .toggle-slider:before {
+            transform: translateX(26px);
+        }
+
+        .snow-toggle-container {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 15px;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+        }
+
         @media (max-width: 768px) {
             .sidebar {
                 flex-wrap: wrap;
@@ -1214,83 +1277,90 @@
         <button class="notif-btn close-btn" onclick="toggleSettings()">✖</button>
     </div>
     <div class="settings-content">
-
-    <div class="setting-group">
-        <label class="setting-label">Theme Presets</label>
-        <div class="theme-grid" id="themeGrid"></div>
-    </div>
-
-    <div class="setting-group">
-        <label class="setting-label">Custom Colors</label>
-        <div class="color-picker-group">
-            <div class="color-picker-item">
-                <label>Background</label>
-                <input type="color" id="bgColor" value="#1a0000">
-            </div>
-            <div class="color-picker-item">
-                <label>Accent</label>
-                <input type="color" id="accentColor" value="#ff0000">
-            </div>
-            <div class="color-picker-item">
-                <label>Text</label>
-                <input type="color" id="textColor" value="#ffffff">
-            </div>
-            <div class="color-picker-item">
-                <label>Glow</label>
-                <input type="color" id="glowColor" value="#ff0000">
-            </div>
+        <div class="setting-group">
+            <label class="setting-label">Theme Presets</label>
+            <div class="theme-grid" id="themeGrid"></div>
         </div>
-        <button class="setting-btn" onclick="applyCustomTheme()">Apply Custom Theme</button>
-        <button class="setting-btn" onclick="resetTheme()">Reset to Default</button>
-    </div>
 
-    <div class="setting-group">
-        <label class="setting-label">Custom Background</label>
-        <input type="file" id="backgroundUpload" accept="image/*" class="setting-input" style="padding: 8px;">
-        <button class="setting-btn" onclick="uploadBackground()">Upload Background</button>
-        <button class="setting-btn" onclick="removeBackground()">Remove Background</button>
-    </div>
-
-    <div class="setting-group">
-        <label class="setting-label">Snow Effect</label>
-        <div class="snow-controls">
-            <div class="snow-control-item">
-                <label>Count: <span id="snowCountValue">150</span></label>
-                <input type="range" id="snowCount" min="0" max="300" value="150">
+        <div class="setting-group">
+            <label class="setting-label">Custom Colors</label>
+            <div class="color-picker-group">
+                <div class="color-picker-item">
+                    <label>Background</label>
+                    <input type="color" id="bgColor" value="#1a0000" onchange="applyColorChange()">
+                </div>
+                <div class="color-picker-item">
+                    <label>Accent</label>
+                    <input type="color" id="accentColor" value="#ff0000" onchange="applyColorChange()">
+                </div>
+                <div class="color-picker-item">
+                    <label>Text</label>
+                    <input type="color" id="textColor" value="#ffffff" onchange="applyColorChange()">
+                </div>
+                <div class="color-picker-item">
+                    <label>Glow</label>
+                    <input type="color" id="glowColor" value="#ff0000" onchange="applyColorChange()">
+                </div>
             </div>
-            <div class="snow-control-item">
-                <label>Size: <span id="snowSizeValue">3</span></label>
-                <input type="range" id="snowSize" min="1" max="10" value="3">
-            </div>
-            <div class="snow-control-item">
-                <label>Speed: <span id="snowSpeedValue">1.2</span></label>
-                <input type="range" id="snowSpeed" min="0.5" max="3" step="0.1" value="1.2">
-            </div>
-            <div class="snow-control-item">
-                <label>Color</label>
-                <input type="color" id="snowColor" value="#ffffff">
-            </div>
+            <button class="setting-btn" onclick="saveCustomTheme()">Save Custom Theme</button>
+            <button class="setting-btn" onclick="resetTheme()">Reset to Default</button>
         </div>
-        <button class="setting-btn" onclick="applySnowSettings()">Apply Snow Settings</button>
-    </div>
 
-    <div class="setting-group teacher-link-panel">
-        <label class="setting-label">🔗 Teacher Redirect Link</label>
-        <p style="font-size: 13px; color: var(--muted); margin-bottom: 10px;">
-            Set a link that opens when teacher/admin hotkey is pressed (Escape key)
-        </p>
-        <input type="text" class="teacher-link-input" id="teacherLinkInput" placeholder="https://classroom.google.com">
-        <button class="setting-btn" onclick="saveTeacherLink()">Save Link</button>
-        <div id="teacherLinkStatus"></div>
-    </div>
+        <div class="setting-group">
+            <label class="setting-label">Custom Background</label>
+            <input type="file" id="backgroundUpload" accept="image/*" class="setting-input" style="padding: 8px;">
+            <button class="setting-btn" onclick="uploadBackground()">Upload Background</button>
+            <button class="setting-btn" onclick="removeBackground()">Remove Background</button>
+        </div>
 
-    <div class="setting-group tab-customization-panel">
-        <label class="setting-label">📑 Tab Customization</label>
-        <input type="text" class="setting-input" id="tabTitleInput" placeholder="Custom Tab Title" style="margin-bottom: 10px;">
-        <input type="text" class="setting-input" id="tabIconInput" placeholder="Tab Icon URL (favicon)">
-        <button class="setting-btn" onclick="saveTabCustomization()">Apply Tab Settings</button>
-        <button class="setting-btn" onclick="resetTabCustomization()">Reset Tab</button>
-    </div>
+        <div class="setting-group">
+            <label class="setting-label">❄️ Snow Effect</label>
+            <div class="snow-toggle-container">
+                <span>Enable Snow Effect</span>
+                <label class="toggle-switch">
+                    <input type="checkbox" id="snowToggle" checked onchange="toggleSnow()">
+                    <span class="toggle-slider"></span>
+                </label>
+            </div>
+            <div class="snow-controls">
+                <div class="snow-control-item">
+                    <label>Count: <span id="snowCountValue">150</span></label>
+                    <input type="range" id="snowCount" min="0" max="300" value="150" oninput="updateSnowSettings()">
+                </div>
+                <div class="snow-control-item">
+                    <label>Size: <span id="snowSizeValue">3</span></label>
+                    <input type="range" id="snowSize" min="1" max="10" value="3" step="0.1" oninput="updateSnowSettings()">
+                </div>
+                <div class="snow-control-item">
+                    <label>Speed: <span id="snowSpeedValue">1.2</span></label>
+                    <input type="range" id="snowSpeed" min="0.1" max="3" step="0.1" value="1.2" oninput="updateSnowSettings()">
+                </div>
+                <div class="snow-control-item">
+                    <label>Color</label>
+                    <input type="color" id="snowColor" value="#ffffff" onchange="updateSnowSettings()">
+                </div>
+            </div>
+            <button class="setting-btn" onclick="saveSnowSettings()">Save Snow Settings</button>
+            <button class="setting-btn" onclick="snowEffect ? snowEffect.reset() : ''" style="margin-top: 10px; background: #555;">Reset Snow</button>
+        </div>
+
+        <div class="setting-group teacher-link-panel">
+            <label class="setting-label">🔗 Teacher Redirect Link</label>
+            <p style="font-size: 13px; color: var(--muted); margin-bottom: 10px;">
+                Set a link that opens when teacher/admin hotkey is pressed (Escape key)
+            </p>
+            <input type="text" class="teacher-link-input" id="teacherLinkInput" placeholder="https://classroom.google.com">
+            <button class="setting-btn" onclick="saveTeacherLink()">Save Link</button>
+            <div id="teacherLinkStatus"></div>
+        </div>
+
+        <div class="setting-group tab-customization-panel">
+            <label class="setting-label">📑 Tab Customization</label>
+            <input type="text" class="setting-input" id="tabTitleInput" placeholder="Custom Tab Title" style="margin-bottom: 10px;">
+            <input type="text" class="setting-input" id="tabIconInput" placeholder="Tab Icon URL (favicon)">
+            <button class="setting-btn" onclick="saveTabCustomization()">Apply Tab Settings</button>
+            <button class="setting-btn" onclick="resetTabCustomization()">Reset Tab</button>
+        </div>
     </div>
 </div>
 
@@ -1438,6 +1508,752 @@ document.addEventListener('DOMContentLoaded', function() {
 </script>
 
 <script>
+// Snow Effect
+class SnowEffect {
+    constructor() {
+        this.canvas = document.getElementById('snowCanvas');
+        this.ctx = this.canvas.getContext('2d');
+        this.snowflakes = [];
+        this.isAnimating = false;
+        this.animationId = null;
+        this.enabled = true;
+        
+        // Get initial values from CSS variables
+        this.snowCount = parseInt(getComputedStyle(document.documentElement)
+            .getPropertyValue('--snowCount').trim()) || 150;
+        this.snowSize = parseFloat(getComputedStyle(document.documentElement)
+            .getPropertyValue('--snowSize').trim()) || 3;
+        this.snowSpeed = parseFloat(getComputedStyle(document.documentElement)
+            .getPropertyValue('--snowSpeed').trim()) || 1.2;
+        this.snowColor = getComputedStyle(document.documentElement)
+            .getPropertyValue('--snowColor').trim() || '#ffffff';
+        
+        this.init();
+    }
+    
+    init() {
+        this.resizeCanvas();
+        window.addEventListener('resize', () => this.resizeCanvas());
+        this.createSnowflakes();
+        
+        // Check if snow is enabled from localStorage
+        const savedEnabled = localStorage.getItem('snowEnabled');
+        if (savedEnabled !== null) {
+            this.enabled = savedEnabled === 'true';
+        }
+        
+        if (this.enabled) {
+            this.start();
+        } else {
+            this.canvas.classList.add('hidden');
+        }
+    }
+    
+    resizeCanvas() {
+        this.canvas.width = window.innerWidth;
+        this.canvas.height = window.innerHeight;
+    }
+    
+    createSnowflakes() {
+        this.snowflakes = [];
+        for (let i = 0; i < this.snowCount; i++) {
+            this.snowflakes.push({
+                x: Math.random() * this.canvas.width,
+                y: Math.random() * this.canvas.height,
+                radius: Math.random() * this.snowSize + 1,
+                speed: Math.random() * this.snowSpeed + 0.5,
+                opacity: Math.random() * 0.8 + 0.2,
+                sway: Math.random() * 2 - 1
+            });
+        }
+    }
+    
+    updateSnowflakes() {
+        for (let flake of this.snowflakes) {
+            flake.y += flake.speed;
+            flake.x += flake.sway * 0.5;
+            
+            if (flake.y > this.canvas.height) {
+                flake.y = -flake.radius;
+                flake.x = Math.random() * this.canvas.width;
+            }
+            
+            if (flake.x > this.canvas.width) {
+                flake.x = -flake.radius;
+            } else if (flake.x < -flake.radius) {
+                flake.x = this.canvas.width;
+            }
+        }
+    }
+    
+    drawSnowflakes() {
+        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+        this.ctx.fillStyle = this.snowColor;
+        
+        for (let flake of this.snowflakes) {
+            this.ctx.globalAlpha = flake.opacity;
+            this.ctx.beginPath();
+            this.ctx.arc(flake.x, flake.y, flake.radius, 0, Math.PI * 2);
+            this.ctx.fill();
+        }
+        this.ctx.globalAlpha = 1;
+    }
+    
+    animate() {
+        if (!this.enabled) return;
+        
+        this.updateSnowflakes();
+        this.drawSnowflakes();
+        this.animationId = requestAnimationFrame(() => this.animate());
+    }
+    
+    start() {
+        if (!this.isAnimating && this.enabled) {
+            this.isAnimating = true;
+            this.canvas.classList.remove('hidden');
+            this.animate();
+        }
+    }
+    
+    stop() {
+        if (this.isAnimating) {
+            this.isAnimating = false;
+            cancelAnimationFrame(this.animationId);
+            this.canvas.classList.add('hidden');
+        }
+    }
+    
+    toggle() {
+        this.enabled = !this.enabled;
+        
+        if (this.enabled) {
+            this.start();
+        } else {
+            this.stop();
+        }
+        
+        // Update CSS variable
+        document.documentElement.style.setProperty('--snowEnabled', this.enabled ? '1' : '0');
+        
+        // Save to localStorage
+        localStorage.setItem('snowEnabled', this.enabled);
+        localStorage.setItem('snowSettings', JSON.stringify({
+            enabled: this.enabled,
+            count: this.snowCount,
+            size: this.snowSize,
+            speed: this.snowSpeed,
+            color: this.snowColor
+        }));
+        
+        // Update toggle UI
+        document.getElementById('snowToggle').checked = this.enabled;
+        
+        return this.enabled;
+    }
+    
+    updateSettings(count, size, speed, color, save = true) {
+        this.snowCount = parseInt(count) || 150;
+        this.snowSize = parseFloat(size) || 3;
+        this.snowSpeed = parseFloat(speed) || 1.2;
+        this.snowColor = color || '#ffffff';
+        
+        // Update CSS variables
+        document.documentElement.style.setProperty('--snowCount', this.snowCount);
+        document.documentElement.style.setProperty('--snowSize', this.snowSize);
+        document.documentElement.style.setProperty('--snowSpeed', this.snowSpeed);
+        document.documentElement.style.setProperty('--snowColor', this.snowColor);
+        
+        if (save) {
+            // Save to localStorage
+            localStorage.setItem('snowSettings', JSON.stringify({
+                enabled: this.enabled,
+                count: this.snowCount,
+                size: this.snowSize,
+                speed: this.snowSpeed,
+                color: this.snowColor
+            }));
+        }
+        
+        this.stop();
+        this.createSnowflakes();
+        if (this.enabled) {
+            this.start();
+        }
+        
+        // Update UI values
+        this.updateSliderValues();
+    }
+    
+    reset() {
+        const defaultSettings = {
+            count: 150,
+            size: 3,
+            speed: 1.2,
+            color: '#ffffff'
+        };
+        
+        this.updateSettings(
+            defaultSettings.count,
+            defaultSettings.size,
+            defaultSettings.speed,
+            defaultSettings.color
+        );
+        
+        // Update UI sliders
+        document.getElementById('snowCount').value = defaultSettings.count;
+        document.getElementById('snowSize').value = defaultSettings.size;
+        document.getElementById('snowSpeed').value = defaultSettings.speed;
+        document.getElementById('snowColor').value = defaultSettings.color;
+        
+        this.updateSliderValues();
+    }
+    
+    updateSliderValues() {
+        document.getElementById('snowCountValue').textContent = this.snowCount;
+        document.getElementById('snowSizeValue').textContent = this.snowSize;
+        document.getElementById('snowSpeedValue').textContent = this.snowSpeed;
+    }
+}
+
+// Initialize snow effect
+let snowEffect = null;
+
+// Theme Management
+class ThemeManager {
+    constructor() {
+        this.themes = {
+            default: {
+                name: 'Default',
+                bg: '#1a0000',
+                header: '#330000',
+                text: '#ffffff',
+                accent: '#ff0000',
+                accentDark: '#cc0000',
+                glowColor: '#ff0000',
+                cardBg: '#1a0000'
+            },
+            dark: {
+                name: 'Dark',
+                bg: '#0a0a0a',
+                header: '#1a1a1a',
+                text: '#ffffff',
+                accent: '#00a8ff',
+                accentDark: '#0077b6',
+                glowColor: '#00a8ff',
+                cardBg: '#1a1a1a'
+            },
+            purple: {
+                name: 'Purple',
+                bg: '#1a001a',
+                header: '#330033',
+                text: '#ffffff',
+                accent: '#9c27b0',
+                accentDark: '#6a1b9a',
+                glowColor: '#9c27b0',
+                cardBg: '#1a001a'
+            },
+            green: {
+                name: 'Green',
+                bg: '#001a00',
+                header: '#003300',
+                text: '#ffffff',
+                accent: '#4caf50',
+                accentDark: '#2e7d32',
+                glowColor: '#4caf50',
+                cardBg: '#001a00'
+            },
+            blue: {
+                name: 'Blue',
+                bg: '#001a33',
+                header: '#003366',
+                text: '#ffffff',
+                accent: '#2196f3',
+                accentDark: '#0d47a1',
+                glowColor: '#2196f3',
+                cardBg: '#001a33'
+            }
+        };
+        
+        this.currentTheme = 'default';
+        this.init();
+    }
+    
+    init() {
+        this.loadTheme();
+        this.createThemeGrid();
+        this.setupEventListeners();
+    }
+    
+    createThemeGrid() {
+        const themeGrid = document.getElementById('themeGrid');
+        if (!themeGrid) return;
+        
+        themeGrid.innerHTML = '';
+        
+        for (const [key, theme] of Object.entries(this.themes)) {
+            const themeCard = document.createElement('div');
+            themeCard.className = `theme-card ${key === this.currentTheme ? 'active' : ''}`;
+            themeCard.dataset.theme = key;
+            themeCard.onclick = () => this.applyTheme(key);
+            
+            themeCard.innerHTML = `
+                <div class="theme-name">${theme.name}</div>
+                <div class="theme-preview">
+                    <div class="theme-color" style="background: ${theme.bg}" title="Background"></div>
+                    <div class="theme-color" style="background: ${theme.accent}" title="Accent"></div>
+                    <div class="theme-color" style="background: ${theme.cardBg}" title="Card"></div>
+                </div>
+            `;
+            
+            themeGrid.appendChild(themeCard);
+        }
+    }
+    
+    applyTheme(themeName) {
+        if (!this.themes[themeName]) return;
+        
+        const theme = this.themes[themeName];
+        this.currentTheme = themeName;
+        
+        // Update CSS variables
+        document.documentElement.style.setProperty('--bg', theme.bg);
+        document.documentElement.style.setProperty('--header', theme.header);
+        document.documentElement.style.setProperty('--text', theme.text);
+        document.documentElement.style.setProperty('--accent', theme.accent);
+        document.documentElement.style.setProperty('--accentDark', theme.accentDark);
+        document.documentElement.style.setProperty('--glowColor', theme.glowColor);
+        document.documentElement.style.setProperty('--cardBg', theme.cardBg);
+        
+        // Update color pickers
+        document.getElementById('bgColor').value = theme.bg;
+        document.getElementById('accentColor').value = theme.accent;
+        document.getElementById('textColor').value = theme.text;
+        document.getElementById('glowColor').value = theme.glowColor;
+        
+        // Update active state in grid
+        document.querySelectorAll('.theme-card').forEach(card => {
+            card.classList.remove('active');
+            if (card.dataset.theme === themeName) {
+                card.classList.add('active');
+            }
+        });
+        
+        // Save to localStorage
+        localStorage.setItem('currentTheme', themeName);
+        localStorage.setItem('customColors', JSON.stringify(theme));
+        
+        this.showSaveNotification('Theme applied successfully!');
+    }
+    
+    loadTheme() {
+        // Load saved theme from localStorage
+        const savedTheme = localStorage.getItem('currentTheme');
+        const customColors = JSON.parse(localStorage.getItem('customColors') || 'null');
+        
+        if (savedTheme && this.themes[savedTheme]) {
+            this.applyTheme(savedTheme);
+        } else if (customColors) {
+            // Apply custom colors
+            this.applyCustomColors(customColors);
+        }
+        
+        // Load snow settings
+        this.loadSnowSettings();
+    }
+    
+    applyCustomColors(colors) {
+        for (const [key, value] of Object.entries(colors)) {
+            const cssVar = '--' + key.replace(/([A-Z])/g, '-$1').toLowerCase();
+            document.documentElement.style.setProperty(cssVar, value);
+        }
+        
+        // Update color pickers
+        if (colors.bg) document.getElementById('bgColor').value = colors.bg;
+        if (colors.accent) document.getElementById('accentColor').value = colors.accent;
+        if (colors.text) document.getElementById('textColor').value = colors.text;
+        if (colors.glowColor) document.getElementById('glowColor').value = colors.glowColor;
+        
+        // Mark custom theme as active
+        this.currentTheme = 'custom';
+        this.updateThemeGridActiveState();
+    }
+    
+    updateThemeGridActiveState() {
+        document.querySelectorAll('.theme-card').forEach(card => {
+            card.classList.remove('active');
+            if (card.dataset.theme === this.currentTheme) {
+                card.classList.add('active');
+            }
+        });
+    }
+    
+    resetTheme() {
+        this.applyTheme('default');
+        this.showSaveNotification('Theme reset to default!');
+    }
+    
+    loadSnowSettings() {
+        const saved = JSON.parse(localStorage.getItem('snowSettings') || 'null');
+        if (saved) {
+            // Update toggle
+            if (document.getElementById('snowToggle')) {
+                document.getElementById('snowToggle').checked = saved.enabled !== false;
+            }
+            
+            // Update sliders
+            if (document.getElementById('snowCount')) {
+                document.getElementById('snowCount').value = saved.count || 150;
+                document.getElementById('snowSize').value = saved.size || 3;
+                document.getElementById('snowSpeed').value = saved.speed || 1.2;
+                document.getElementById('snowColor').value = saved.color || '#ffffff';
+                
+                // Update display values
+                document.getElementById('snowCountValue').textContent = saved.count || 150;
+                document.getElementById('snowSizeValue').textContent = saved.size || 3;
+                document.getElementById('snowSpeedValue').textContent = saved.speed || 1.2;
+            }
+        }
+    }
+    
+    setupEventListeners() {
+        // Snow controls
+        const snowCount = document.getElementById('snowCount');
+        const snowSize = document.getElementById('snowSize');
+        const snowSpeed = document.getElementById('snowSpeed');
+        
+        if (snowCount) {
+            snowCount.addEventListener('input', (e) => {
+                document.getElementById('snowCountValue').textContent = e.target.value;
+            });
+        }
+        
+        if (snowSize) {
+            snowSize.addEventListener('input', (e) => {
+                document.getElementById('snowSizeValue').textContent = e.target.value;
+            });
+        }
+        
+        if (snowSpeed) {
+            snowSpeed.addEventListener('input', (e) => {
+                document.getElementById('snowSpeedValue').textContent = e.target.value;
+            });
+        }
+    }
+    
+    showSaveNotification(message) {
+        const notification = document.createElement('div');
+        notification.className = 'save-notification';
+        notification.textContent = message;
+        document.body.appendChild(notification);
+        
+        setTimeout(() => notification.classList.add('show'), 10);
+        
+        setTimeout(() => {
+            notification.classList.remove('show');
+            setTimeout(() => notification.remove(), 400);
+        }, 3000);
+    }
+}
+
+// Global functions for HTML onclick events
+function applyColorChange() {
+    // Auto-apply color changes as they happen
+    const customColors = {
+        bg: document.getElementById('bgColor').value,
+        accent: document.getElementById('accentColor').value,
+        text: document.getElementById('textColor').value,
+        glowColor: document.getElementById('glowColor').value,
+        accentDark: darkenColor(document.getElementById('accentColor').value, 20),
+        header: darkenColor(document.getElementById('bgColor').value, 20),
+        cardBg: darkenColor(document.getElementById('bgColor').value, 10)
+    };
+    
+    // Apply colors immediately
+    for (const [key, value] of Object.entries(customColors)) {
+        const cssVar = '--' + key.replace(/([A-Z])/g, '-$1').toLowerCase();
+        document.documentElement.style.setProperty(cssVar, value);
+    }
+    
+    // Mark as custom theme
+    window.themeManager.currentTheme = 'custom';
+    window.themeManager.updateThemeGridActiveState();
+}
+
+function saveCustomTheme() {
+    const themeManager = window.themeManager;
+    if (!themeManager) return;
+    
+    const customColors = {
+        bg: document.getElementById('bgColor').value,
+        accent: document.getElementById('accentColor').value,
+        text: document.getElementById('textColor').value,
+        glowColor: document.getElementById('glowColor').value,
+        accentDark: darkenColor(document.getElementById('accentColor').value, 20),
+        header: darkenColor(document.getElementById('bgColor').value, 20),
+        cardBg: darkenColor(document.getElementById('bgColor').value, 10)
+    };
+    
+    themeManager.applyCustomColors(customColors);
+    localStorage.setItem('customColors', JSON.stringify(customColors));
+    localStorage.setItem('currentTheme', 'custom');
+    themeManager.showSaveNotification('Custom theme saved!');
+}
+
+function darkenColor(color, percent) {
+    const num = parseInt(color.replace("#", ""), 16);
+    const amt = Math.round(2.55 * percent);
+    const R = (num >> 16) - amt;
+    const G = (num >> 8 & 0x00FF) - amt;
+    const B = (num & 0x0000FF) - amt;
+    
+    return "#" + (
+        0x1000000 +
+        (R < 255 ? (R < 1 ? 0 : R) : 255) * 0x10000 +
+        (G < 255 ? (G < 1 ? 0 : G) : 255) * 0x100 +
+        (B < 255 ? (B < 1 ? 0 : B) : 255)
+    ).toString(16).slice(1);
+}
+
+function resetTheme() {
+    const themeManager = window.themeManager;
+    if (themeManager) {
+        themeManager.resetTheme();
+    }
+}
+
+function toggleSnow() {
+    if (!snowEffect) {
+        snowEffect = new SnowEffect();
+    }
+    
+    const enabled = snowEffect.toggle();
+    
+    // Show notification
+    const themeManager = window.themeManager;
+    if (themeManager) {
+        themeManager.showSaveNotification(`Snow effect ${enabled ? 'enabled' : 'disabled'}!`);
+    }
+}
+
+function updateSnowSettings() {
+    if (!snowEffect) {
+        snowEffect = new SnowEffect();
+    }
+    
+    const count = document.getElementById('snowCount').value;
+    const size = document.getElementById('snowSize').value;
+    const speed = document.getElementById('snowSpeed').value;
+    const color = document.getElementById('snowColor').value;
+    
+    // Update without saving to localStorage (live preview)
+    snowEffect.updateSettings(count, size, speed, color, false);
+    
+    // Update display values
+    document.getElementById('snowCountValue').textContent = count;
+    document.getElementById('snowSizeValue').textContent = size;
+    document.getElementById('snowSpeedValue').textContent = speed;
+}
+
+function saveSnowSettings() {
+    if (!snowEffect) {
+        snowEffect = new SnowEffect();
+    }
+    
+    const count = document.getElementById('snowCount').value;
+    const size = document.getElementById('snowSize').value;
+    const speed = document.getElementById('snowSpeed').value;
+    const color = document.getElementById('snowColor').value;
+    
+    // Save to localStorage
+    snowEffect.updateSettings(count, size, speed, color, true);
+    
+    // Show notification
+    const themeManager = window.themeManager;
+    if (themeManager) {
+        themeManager.showSaveNotification('Snow settings saved!');
+    }
+}
+
+function uploadBackground() {
+    const input = document.getElementById('backgroundUpload');
+    if (!input.files[0]) return;
+    
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        const bgImage = `url(${e.target.result})`;
+        document.body.style.backgroundImage = bgImage;
+        document.body.style.backgroundSize = 'cover';
+        document.body.style.backgroundAttachment = 'fixed';
+        localStorage.setItem('customBackground', e.target.result);
+        
+        const themeManager = window.themeManager;
+        if (themeManager) {
+            themeManager.showSaveNotification('Background uploaded!');
+        }
+    };
+    reader.readAsDataURL(input.files[0]);
+}
+
+function removeBackground() {
+    document.body.style.backgroundImage = '';
+    document.body.style.backgroundSize = '';
+    document.body.style.backgroundAttachment = '';
+    localStorage.removeItem('customBackground');
+    
+    const themeManager = window.themeManager;
+    if (themeManager) {
+        themeManager.showSaveNotification('Background removed!');
+    }
+}
+
+function saveTeacherLink() {
+    const link = document.getElementById('teacherLinkInput').value.trim();
+    if (link) {
+        localStorage.setItem('teacherLink', link);
+        document.getElementById('teacherLinkStatus').innerHTML = `
+            <div class="teacher-link-active">
+                <span>✓ Link Saved: ${link}</span>
+                <button class="notif-btn" onclick="removeTeacherLink()" style="padding: 5px 10px; font-size: 12px;">Remove</button>
+            </div>
+        `;
+        
+        const themeManager = window.themeManager;
+        if (themeManager) {
+            themeManager.showSaveNotification('Teacher link saved!');
+        }
+    }
+}
+
+function removeTeacherLink() {
+    localStorage.removeItem('teacherLink');
+    document.getElementById('teacherLinkStatus').innerHTML = '';
+}
+
+function saveTabCustomization() {
+    const title = document.getElementById('tabTitleInput').value.trim();
+    const icon = document.getElementById('tabIconInput').value.trim();
+    
+    if (title) {
+        document.title = title;
+        localStorage.setItem('tabTitle', title);
+    }
+    
+    if (icon) {
+        let link = document.querySelector("link[rel*='icon']") || document.createElement('link');
+        link.type = 'image/x-icon';
+        link.rel = 'shortcut icon';
+        link.href = icon;
+        document.head.appendChild(link);
+        localStorage.setItem('tabIcon', icon);
+    }
+    
+    const themeManager = window.themeManager;
+    if (themeManager) {
+        themeManager.showSaveNotification('Tab settings saved!');
+    }
+}
+
+function resetTabCustomization() {
+    document.title = 'Game Launcher';
+    localStorage.removeItem('tabTitle');
+    localStorage.removeItem('tabIcon');
+    
+    // Reset favicon to default
+    let link = document.querySelector("link[rel*='icon']");
+    if (link) {
+        link.href = '#';
+    }
+    
+    document.getElementById('tabTitleInput').value = '';
+    document.getElementById('tabIconInput').value = '';
+    
+    const themeManager = window.themeManager;
+    if (themeManager) {
+        themeManager.showSaveNotification('Tab settings reset!');
+    }
+}
+
+// Panel toggle functions
+function toggleSettings() {
+    const panel = document.getElementById('settingsPanel');
+    const overlay = document.getElementById('notificationsOverlay');
+    panel.classList.toggle('open');
+    overlay.classList.toggle('active');
+    
+    // Close notifications if open
+    const notifPanel = document.getElementById('notificationsPanel');
+    notifPanel.classList.remove('open');
+}
+
+function toggleNotifications() {
+    const panel = document.getElementById('notificationsPanel');
+    const overlay = document.getElementById('notificationsOverlay');
+    panel.classList.toggle('open');
+    overlay.classList.toggle('active');
+    
+    // Close settings if open
+    const settingsPanel = document.getElementById('settingsPanel');
+    settingsPanel.classList.remove('open');
+}
+
+function closeAllPanels() {
+    document.getElementById('settingsPanel').classList.remove('open');
+    document.getElementById('notificationsPanel').classList.remove('open');
+    document.getElementById('notificationsOverlay').classList.remove('active');
+}
+
+// Initialize everything when DOM is loaded
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize theme manager
+    window.themeManager = new ThemeManager();
+    
+    // Initialize snow effect
+    snowEffect = new SnowEffect();
+    
+    // Load saved background
+    const savedBackground = localStorage.getItem('customBackground');
+    if (savedBackground) {
+        document.body.style.backgroundImage = `url(${savedBackground})`;
+        document.body.style.backgroundSize = 'cover';
+        document.body.style.backgroundAttachment = 'fixed';
+    }
+    
+    // Load saved teacher link
+    const savedTeacherLink = localStorage.getItem('teacherLink');
+    if (savedTeacherLink) {
+        document.getElementById('teacherLinkInput').value = savedTeacherLink;
+        document.getElementById('teacherLinkStatus').innerHTML = `
+            <div class="teacher-link-active">
+                <span>✓ Link Saved: ${savedTeacherLink}</span>
+                <button class="notif-btn" onclick="removeTeacherLink()" style="padding: 5px 10px; font-size: 12px;">Remove</button>
+            </div>
+        `;
+    }
+    
+    // Load saved tab customization
+    const savedTitle = localStorage.getItem('tabTitle');
+    const savedIcon = localStorage.getItem('tabIcon');
+    
+    if (savedTitle) {
+        document.title = savedTitle;
+        document.getElementById('tabTitleInput').value = savedTitle;
+    }
+    
+    if (savedIcon) {
+        document.getElementById('tabIconInput').value = savedIcon;
+        let link = document.querySelector("link[rel*='icon']") || document.createElement('link');
+        link.type = 'image/x-icon';
+        link.rel = 'shortcut icon';
+        link.href = savedIcon;
+        document.head.appendChild(link);
+    }
+    
+    // Update snow slider values
+    if (snowEffect) {
+        snowEffect.updateSliderValues();
+    }
+});
+
 // Dynamically load script.js with fallback support
 (function() {
     const script = document.createElement('script');
