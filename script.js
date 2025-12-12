@@ -7,9 +7,9 @@ const COVER_URL = `https://cdn.jsdelivr.net/gh/${GITHUB_USER}/${COVER_REPO}@mast
 const GAMES_JSON = [
   {
     "id": -1,
-    "name": "[!] SUGGEST GAMES .gg/D4c9VFYWyU",
-    "cover": `${COVER_URL}/-suggest-games-ggd4c9vfywyu.png`,
-    "url": "https://discord.gg/D4c9VFYWyU"
+    "name": "",
+    "cover": ``,
+    "url": ""
   },
   {
     "id": 0,
@@ -4240,10 +4240,10 @@ const GAMES_JSON = [
   },
   {
     "id": 596,
-    "name": "[!] COMMENTS",
-    "cover": `${COVER_URL}/-comments.png`,
-    "url": "-comments.html",
-    "author": "gn-math",
+    "name": "",
+    "cover": ``,
+    "url": "",
+    "author": ",
     "special": ["tools"],
     "featured": true
   },
