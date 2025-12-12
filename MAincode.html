@@ -553,22 +553,40 @@
             height: calc(100vh - 80px);
             background: linear-gradient(180deg, var(--header), var(--bg));
             border-left: 3px solid var(--accent);
-            padding: 30px;
+            padding: 0;
             transition: right 0.4s;
             z-index: 999;
             overflow-y: auto;
             box-shadow: -5px 0 20px rgba(0, 0, 0, 0.7);
+            display: flex;
+            flex-direction: column;
         }
 
         .settings-panel.open {
             right: 0;
         }
 
-        .settings-panel h2 {
+        .settings-header {
+            padding: 25px 30px;
+            border-bottom: 2px solid var(--accent);
+            background: var(--header);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-shrink: 0;
+        }
+
+        .settings-header h2 {
             color: var(--accent);
-            margin-bottom: 25px;
-            font-size: 28px;
+            font-size: 24px;
             text-shadow: 0 0 15px var(--glowColor);
+            margin: 0;
+        }
+
+        .settings-content {
+            padding: 30px;
+            overflow-y: auto;
+            flex-grow: 1;
         }
 
         .setting-group {
@@ -1145,7 +1163,11 @@
 </div>
 
 <div class="settings-panel" id="settingsPanel">
-    <h2>⚙️ Settings</h2>
+    <div class="settings-header">
+        <h2>⚙️ Settings</h2>
+        <button class="notif-btn close-btn" onclick="toggleSettings()">✖</button>
+    </div>
+    <div class="settings-content">
 
     <div class="setting-group">
         <label class="setting-label">Theme Presets</label>
@@ -1222,6 +1244,7 @@
         <input type="text" class="setting-input" id="tabIconInput" placeholder="Tab Icon URL (favicon)">
         <button class="setting-btn" onclick="saveTabCustomization()">Apply Tab Settings</button>
         <button class="setting-btn" onclick="resetTabCustomization()">Reset Tab</button>
+    </div>
     </div>
 </div>
 
