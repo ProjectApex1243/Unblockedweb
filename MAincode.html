@@ -926,13 +926,19 @@
         const GITHUB_REPO = 'Unblockedweb';
         const GITHUB_BRANCH = 'master';
         
-        // Script sources in priority order
+        // Purge jsdelivr cache first (fire and forget)
+        try {
+            fetch(`https://purge.jsdelivr.net/gh/${GITHUB_USER}/${GITHUB_REPO}@${GITHUB_BRANCH}/script.js`, { mode: 'no-cors' });
+            console.log('Cache purge requested');
+        } catch(e) {}
+        
+        // Script sources in priority order - githack first since jsdelivr caches aggressively
         const scriptSources = [
-            './script.js',                                                              // Local (same directory)
-            `https://cdn.jsdelivr.net/gh/${GITHUB_USER}/${GITHUB_REPO}@${GITHUB_BRANCH}/script.js`,
+            './script.js',
             `https://rawcdn.githack.com/${GITHUB_USER}/${GITHUB_REPO}/${GITHUB_BRANCH}/script.js`,
             `https://raw.githubusercontent.com/${GITHUB_USER}/${GITHUB_REPO}/${GITHUB_BRANCH}/script.js`,
-            `https://cdn.statically.io/gh/${GITHUB_USER}/${GITHUB_REPO}@${GITHUB_BRANCH}/script.js`
+            `https://cdn.statically.io/gh/${GITHUB_USER}/${GITHUB_REPO}@${GITHUB_BRANCH}/script.js`,
+            `https://cdn.jsdelivr.net/gh/${GITHUB_USER}/${GITHUB_REPO}@${GITHUB_BRANCH}/script.js`
         ];
         
         async function loadScript(url) {
