@@ -1,16 +1,9 @@
-// ============================================
-// SCHOOL-SAFE CONFIGURATION
-// Multiple CDN fallbacks for restricted networks
-// ============================================
-
 const GITHUB_USER = 'ProjectApex1243';
 const GITHUB_REPO = 'Unblockedweb';
 const GITHUB_BRANCH = 'master';
 const COVER_REPO = 'Covers-for-web';
 
-// CDN Configuration - Priority order for school networks
 const CDN_CONFIG = {
-    // CDNs to try in order (some schools block specific ones)
     cdns: [
         {
             name: 'jsDelivr',
@@ -34,45 +27,33 @@ const CDN_CONFIG = {
         }
     ],
     
-    // Track which CDN works
     workingCDN: null,
     workingCoverCDN: null,
     
-    // Get URL for main content
     getContentURL: function(file) {
         if (this.workingCDN) {
             return `${this.workingCDN.baseUrl(GITHUB_USER, GITHUB_REPO, GITHUB_BRANCH)}/${file}`;
         }
-        // Default fallback
         return `https://cdn.jsdelivr.net/gh/${GITHUB_USER}/${GITHUB_REPO}@${GITHUB_BRANCH}/${file}`;
     },
     
-    // Get URL for covers
     getCoverURL: function(file) {
         if (this.workingCoverCDN) {
             return `${this.workingCoverCDN.baseUrl(GITHUB_USER, COVER_REPO, 'master')}/${file}`;
         }
-        // Default fallback
         return `https://cdn.jsdelivr.net/gh/${GITHUB_USER}/${COVER_REPO}@master/${file}`;
     },
     
-    // Get all possible URLs for a cover (for fallback loading)
     getAllCoverURLs: function(file) {
         return this.cdns.map(cdn => `${cdn.baseUrl(GITHUB_USER, COVER_REPO, 'master')}/${file}`);
     },
     
-    // Get all possible URLs for content (for fallback loading)
     getAllContentURLs: function(file) {
         return this.cdns.map(cdn => `${cdn.baseUrl(GITHUB_USER, GITHUB_REPO, GITHUB_BRANCH)}/${file}`);
     }
 };
 
-// Legacy support - keep COVER_URL working
 const COVER_URL = `https://cdn.jsdelivr.net/gh/${GITHUB_USER}/${COVER_REPO}@master`;
-
-// ============================================
-// CDN DETECTION & FALLBACK SYSTEM
-// ============================================
 
 async function testCDNAccess(url, timeout = 5000) {
     try {
@@ -93,30 +74,28 @@ async function testCDNAccess(url, timeout = 5000) {
 }
 
 async function findWorkingCDN() {
-    console.log('🔍 Testing CDN accessibility...');
+    console.log('Testing CDN accessibility...');
     
-    // Test file that should exist
     const testFile = 'bowmasters.html';
     
     for (const cdn of CDN_CONFIG.cdns) {
         const testUrl = `${cdn.baseUrl(GITHUB_USER, GITHUB_REPO, GITHUB_BRANCH)}/${testFile}`;
-        console.log(`  Testing ${cdn.name}: ${testUrl}`);
         
         if (await testCDNAccess(testUrl)) {
-            console.log(`  ✓ ${cdn.name} is accessible!`);
+            console.log(`✓ ${cdn.name} is accessible!`);
             CDN_CONFIG.workingCDN = cdn;
             return cdn;
         } else {
-            console.log(`  ✗ ${cdn.name} blocked or unavailable`);
+            console.log(`✗ ${cdn.name} blocked or unavailable`);
         }
     }
     
-    console.warn('⚠️ All CDNs appear blocked. Games may not load.');
+    console.warn('All CDNs appear blocked. Games may not load.');
     return null;
 }
 
 async function findWorkingCoverCDN() {
-    console.log('🔍 Testing Cover CDN accessibility...');
+    console.log('Testing Cover CDN accessibility...');
     
     const testFile = 'bowmasters.png';
     
@@ -124,21 +103,16 @@ async function findWorkingCoverCDN() {
         const testUrl = `${cdn.baseUrl(GITHUB_USER, COVER_REPO, 'master')}/${testFile}`;
         
         if (await testCDNAccess(testUrl)) {
-            console.log(`  ✓ Cover CDN ${cdn.name} is accessible!`);
+            console.log(`✓ Cover CDN ${cdn.name} is accessible!`);
             CDN_CONFIG.workingCoverCDN = cdn;
             return cdn;
         }
     }
     
-    console.warn('⚠️ All Cover CDNs appear blocked. Using placeholder images.');
+    console.warn('All Cover CDNs appear blocked. Using placeholder images.');
     return null;
 }
 
-// ============================================
-// GAMES DATA WITH DYNAMIC CDN SUPPORT
-// ============================================
-
-// Function to get cover URL with fallback support
 function getCoverWithFallback(filename) {
     if (CDN_CONFIG.workingCoverCDN) {
         return `${CDN_CONFIG.workingCoverCDN.baseUrl(GITHUB_USER, COVER_REPO, 'master')}/${filename}`;
@@ -150,7 +124,7 @@ const GAMES_JSON = [
   {
     "id": -1,
     "name": "",
-    "cover": ``,
+    "cover": "",
     "url": ""
   },
   {
@@ -717,7 +691,8 @@ const GAMES_JSON = [
     "id": 85,
     "name": "Cut the Rope",
     "cover": `${COVER_URL}/cut-the-rope.png`,
-    "url": "cut-the-rope.html"
+    "url": "cut-the-rope.html",
+    "author": "ZeptoLab"
   },
   {
     "id": 86,
@@ -1585,9 +1560,9 @@ const GAMES_JSON = [
   },
   {
     "id": 212,
-    "name": "Cut the Rope",
-    "cover": `${COVER_URL}/cut-the-rope.png`,
-    "url": "cut-the-rope.html",
+    "name": "Cut the Rope 2",
+    "cover": `${COVER_URL}/cut-the-rope-2.png`,
+    "url": "cut-the-rope-2.html",
     "author": "ZeptoLab"
   },
   {
@@ -4382,11 +4357,11 @@ const GAMES_JSON = [
   },
 {
     "id": 596,
-    "name": "Game 596",
-    "cover": `${COVER_URL}/placeholder.png`,
-    "url": "game-596.html",
-    "author": "Gzh0821",
-    "special": ["emulator"],
+    "name": "",
+    "cover": ``,
+    "url": "",
+    "author": "Gzh0821",      // ← Added comma
+    "special": ["emulator"],   // ← Added comma
     "featured": true
 },
   {
