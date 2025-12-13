@@ -4380,15 +4380,15 @@ cconst GAMES_JSON = [
     "url": "shapezio.html",
     "author": "scriptwelder"
   },
-  {
+{
     "id": 596,
     "name": "",
     "cover": ``,
     "url": "",
-    "author": ",
-    "special": ["tools"],
+    "author": "Gzh0821",      // ← Added comma
+    "special": ["emulator"],   // ← Added comma
     "featured": true
-  },
+},
   {
     "id": 597,
     "name": "Plants vs. Zombies 2 Gardenless",
