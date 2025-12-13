@@ -146,7 +146,7 @@ function getCoverWithFallback(filename) {
     return `${COVER_URL}/${filename}`;
 }
 
-cconst GAMES_JSON = [
+const GAMES_JSON = [
   {
     "id": -1,
     "name": "",
