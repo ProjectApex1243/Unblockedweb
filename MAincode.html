@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <base href="https://raw.githubusercontent.com/ProjectApex1243/Unblockedweb/master/">
     <title>Game Launcher</title>
     
     <!-- Font Awesome: Multiple CDN fallbacks for school Wi-Fi compatibility -->
@@ -1276,27 +1277,62 @@
     }
 
     // Game player functions
-    function loadGame(url, title) {
+    async function loadGame(url, title) {
         const modal = document.getElementById('gameModal');
         const frame = document.getElementById('gameFrame');
         const titleEl = document.getElementById('modalGameTitle');
         
-        // Build full URL using working CDN
-        let gameUrl = url;
-        if (!url.startsWith('http')) {
-            if (typeof CDN_CONFIG !== 'undefined' && CDN_CONFIG.workingCDN) {
-                gameUrl = CDN_CONFIG.getContentURL(url);
-            } else {
-                gameUrl = `https://cdn.jsdelivr.net/gh/ProjectApex1243/Unblockedweb@master/${url}`;
+        titleEl.textContent = title + ' (Loading...)';
+        modal.style.display = 'flex';
+        document.body.style.overflow = 'hidden';
+        
+        // CDN list for game files - githack serves with proper MIME types
+        const cdnList = [
+            `https://rawcdn.githack.com/ProjectApex1243/Unblockedweb/master/${url}`,
+            `https://cdn.jsdelivr.net/gh/ProjectApex1243/Unblockedweb@master/${url}`,
+            `https://cdn.statically.io/gh/ProjectApex1243/Unblockedweb@master/${url}`
+        ];
+        
+        // Try direct iframe load first (works if CDN serves proper content-type)
+        for (const cdnUrl of cdnList) {
+            try {
+                // Test if URL is accessible
+                const testResponse = await fetch(cdnUrl, { method: 'HEAD' });
+                if (testResponse.ok) {
+                    frame.src = cdnUrl;
+                    titleEl.textContent = title;
+                    return;
+                }
+            } catch (e) {
+                continue;
             }
         }
         
-        titleEl.textContent = title;
-        frame.src = gameUrl;
-        modal.style.display = 'flex';
-        document.body.style.overflow = 'hidden';
-    }
-
+        // Fallback: fetch HTML and inject into iframe via blob/srcdoc
+        for (const cdnUrl of cdnList) {
+            try {
+                const response = await fetch(cdnUrl);
+                if (response.ok) {
+                    let html = await response.text();
+                    
+                    // Fix relative URLs in the HTML to point to the CDN
+                    const baseUrl = cdnUrl.substring(0, cdnUrl.lastIndexOf('/') + 1);
+                    html = html.replace(/(src|href)=["'](?!http|data:|#|\/\/)([^"']+)["']/gi, 
+                        (match, attr, path) => `${attr}="${baseUrl}${path}"`);
+                    
+                    // Use srcdoc for better compatibility
+                    frame.srcdoc = html;
+                    titleEl.textContent = title;
+                    return;
+                }
+            } catch (e) {
+                continue;
+            }
+        }
+        
+        // All failed
+        titleEl.textContent = title + ' (Failed to load)';
+        frame.srcdoc = '<html><body style="background:#1a0000;color:white;display:flex;align-items:center;justify-content:center;height:100vh;font-family:Arial;"><div style="text-align:center;"><h1>Failed to load game</h1><p>Network may be blocking game content</p></div></body></html>';
     function closeGame() {
         const modal = document.getElementById('gameModal');
         const frame = document.getElementById('gameFrame');
