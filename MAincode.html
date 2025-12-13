@@ -807,12 +807,23 @@
                 if (!response.ok) throw new Error('Not OK');
                 const code = await response.text();
                 
-                // Execute the code
-                const script = document.createElement('script');
-                script.textContent = code;
-                document.body.appendChild(script);
+                // Execute the code using blob URL (handles special characters properly)
+                const blob = new Blob([code], { type: 'application/javascript' });
+                const blobUrl = URL.createObjectURL(blob);
                 
-                return url;
+                return new Promise((resolve, reject) => {
+                    const script = document.createElement('script');
+                    script.src = blobUrl;
+                    script.onload = () => {
+                        URL.revokeObjectURL(blobUrl);
+                        resolve(url);
+                    };
+                    script.onerror = () => {
+                        URL.revokeObjectURL(blobUrl);
+                        reject(new Error(`Failed to execute: ${url}`));
+                    };
+                    document.body.appendChild(script);
+                });
             } catch (e) {
                 throw new Error(`Failed to fetch: ${url}`);
             }
