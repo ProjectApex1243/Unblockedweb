@@ -1,10 +1,152 @@
+// ============================================
+// SCHOOL-SAFE CONFIGURATION
+// Multiple CDN fallbacks for restricted networks
+// ============================================
+
 const GITHUB_USER = 'ProjectApex1243';
 const GITHUB_REPO = 'Unblockedweb';
 const GITHUB_BRANCH = 'master';
 const COVER_REPO = 'Covers-for-web';
+
+// CDN Configuration - Priority order for school networks
+const CDN_CONFIG = {
+    // CDNs to try in order (some schools block specific ones)
+    cdns: [
+        {
+            name: 'jsDelivr',
+            baseUrl: (user, repo, branch) => `https://cdn.jsdelivr.net/gh/${user}/${repo}@${branch}`,
+            priority: 1
+        },
+        {
+            name: 'Statically',
+            baseUrl: (user, repo, branch) => `https://cdn.statically.io/gh/${user}/${repo}@${branch}`,
+            priority: 2
+        },
+        {
+            name: 'GitHack',
+            baseUrl: (user, repo, branch) => `https://rawcdn.githack.com/${user}/${repo}/${branch}`,
+            priority: 3
+        },
+        {
+            name: 'RawGitHub',
+            baseUrl: (user, repo, branch) => `https://raw.githubusercontent.com/${user}/${repo}/${branch}`,
+            priority: 4
+        }
+    ],
+    
+    // Track which CDN works
+    workingCDN: null,
+    workingCoverCDN: null,
+    
+    // Get URL for main content
+    getContentURL: function(file) {
+        if (this.workingCDN) {
+            return `${this.workingCDN.baseUrl(GITHUB_USER, GITHUB_REPO, GITHUB_BRANCH)}/${file}`;
+        }
+        // Default fallback
+        return `https://cdn.jsdelivr.net/gh/${GITHUB_USER}/${GITHUB_REPO}@${GITHUB_BRANCH}/${file}`;
+    },
+    
+    // Get URL for covers
+    getCoverURL: function(file) {
+        if (this.workingCoverCDN) {
+            return `${this.workingCoverCDN.baseUrl(GITHUB_USER, COVER_REPO, 'master')}/${file}`;
+        }
+        // Default fallback
+        return `https://cdn.jsdelivr.net/gh/${GITHUB_USER}/${COVER_REPO}@master/${file}`;
+    },
+    
+    // Get all possible URLs for a cover (for fallback loading)
+    getAllCoverURLs: function(file) {
+        return this.cdns.map(cdn => `${cdn.baseUrl(GITHUB_USER, COVER_REPO, 'master')}/${file}`);
+    },
+    
+    // Get all possible URLs for content (for fallback loading)
+    getAllContentURLs: function(file) {
+        return this.cdns.map(cdn => `${cdn.baseUrl(GITHUB_USER, GITHUB_REPO, GITHUB_BRANCH)}/${file}`);
+    }
+};
+
+// Legacy support - keep COVER_URL working
 const COVER_URL = `https://cdn.jsdelivr.net/gh/${GITHUB_USER}/${COVER_REPO}@master`;
 
-const GAMES_JSON = [
+// ============================================
+// CDN DETECTION & FALLBACK SYSTEM
+// ============================================
+
+async function testCDNAccess(url, timeout = 5000) {
+    try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), timeout);
+        
+        const response = await fetch(url, {
+            method: 'HEAD',
+            signal: controller.signal,
+            cache: 'no-cache'
+        });
+        
+        clearTimeout(timeoutId);
+        return response.ok;
+    } catch (e) {
+        return false;
+    }
+}
+
+async function findWorkingCDN() {
+    console.log('🔍 Testing CDN accessibility...');
+    
+    // Test file that should exist
+    const testFile = 'bowmasters.html';
+    
+    for (const cdn of CDN_CONFIG.cdns) {
+        const testUrl = `${cdn.baseUrl(GITHUB_USER, GITHUB_REPO, GITHUB_BRANCH)}/${testFile}`;
+        console.log(`  Testing ${cdn.name}: ${testUrl}`);
+        
+        if (await testCDNAccess(testUrl)) {
+            console.log(`  ✓ ${cdn.name} is accessible!`);
+            CDN_CONFIG.workingCDN = cdn;
+            return cdn;
+        } else {
+            console.log(`  ✗ ${cdn.name} blocked or unavailable`);
+        }
+    }
+    
+    console.warn('⚠️ All CDNs appear blocked. Games may not load.');
+    return null;
+}
+
+async function findWorkingCoverCDN() {
+    console.log('🔍 Testing Cover CDN accessibility...');
+    
+    const testFile = 'bowmasters.png';
+    
+    for (const cdn of CDN_CONFIG.cdns) {
+        const testUrl = `${cdn.baseUrl(GITHUB_USER, COVER_REPO, 'master')}/${testFile}`;
+        
+        if (await testCDNAccess(testUrl)) {
+            console.log(`  ✓ Cover CDN ${cdn.name} is accessible!`);
+            CDN_CONFIG.workingCoverCDN = cdn;
+            return cdn;
+        }
+    }
+    
+    console.warn('⚠️ All Cover CDNs appear blocked. Using placeholder images.');
+    return null;
+}
+
+// ============================================
+// GAMES DATA WITH DYNAMIC CDN SUPPORT
+// ============================================
+
+// Function to get cover URL with fallback support
+function getCoverWithFallback(filename) {
+    if (CDN_CONFIG.workingCoverCDN) {
+        return `${CDN_CONFIG.workingCoverCDN.baseUrl(GITHUB_USER, COVER_REPO, 'master')}/${filename}`;
+    }
+    return `${COVER_URL}/${filename}`;
+}
+
+cconst GAMES_JSON = [
   {
     "id": -1,
     "name": "",
@@ -4625,1316 +4767,287 @@ const GAMES_JSON = [
        
 ];
 
-    let games = [];
-    let currentGame = { filename: '', title: '' };
 
-    // Theme system with all 27 themes
-    const themes = {
-        midnight_blossom: {
-            bg: "#1a1023", header: "#2a1738", text: "#f8eaff", muted: "#d7c6e6",
-            accent: "#ff7bda", accentDark: "#b30088", glowColor: "#ffb3ef", cardBg: "#261332",
-            cardRadius: 12, glowSize: 28, glowStrength: 0.55, fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
-            snowColor: "#ffcdf5", snowCount: 130, snowSize: 3, snowSpeed: 1.4
-        },
-        emerald_peak: {
-            bg: "#051914", header: "#0b2c22", text: "#dcfff5", muted: "#b9e6d2",
-            accent: "#4cffc1", accentDark: "#158f6b", glowColor: "#77ffd9", cardBg: "#0f3b2c",
-            cardRadius: 14, glowSize: 22, glowStrength: 0.4, fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
-            snowColor: "#a8ffe5", snowCount: 110, snowSize: 3, snowSpeed: 1.2
-        },
-        solar_flare: {
-            bg: "#2a0b00", header: "#4d1300", text: "#ffe6d4", muted: "#ffc4a1",
-            accent: "#ff5e00", accentDark: "#a63500", glowColor: "#ff9e66", cardBg: "#3b0f00",
-            cardRadius: 10, glowSize: 33, glowStrength: 0.6, fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
-            snowColor: "#ff7033", snowCount: 85, snowSize: 4, snowSpeed: 1.7
-        },
-        frostbyte: {
-            bg: "#02131e", header: "#062738", text: "#ddf7ff", muted: "#b8e5f2",
-            accent: "#52d7ff", accentDark: "#1e7da3", glowColor: "#b8f5ff", cardBg: "#0a2c40",
-            cardRadius: 18, glowSize: 25, glowStrength: 0.52, fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
-            snowColor: "#cff7ff", snowCount: 200, snowSize: 2, snowSpeed: 1.1
-        },
-        bubblegum_dream: {
-            bg: "#ffdef2", header: "#ffd1ee", text: "#5e004a", muted: "#8a006b",
-            accent: "#ff77cf", accentDark: "#d1008d", glowColor: "#ffb0e8", cardBg: "#ffd8ef",
-            cardRadius: 20, glowSize: 20, glowStrength: 0.4, fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
-            snowColor: "#ff87d9", snowCount: 50, snowSize: 5, snowSpeed: 0.8
-        },
-        radioactive_neon: {
-            bg: "#031301", header: "#062705", text: "#dfffda", muted: "#b9e6bc",
-            accent: "#39ff14", accentDark: "#1faf08", glowColor: "#7dff67", cardBg: "#0b3d09",
-            cardRadius: 10, glowSize: 40, glowStrength: 0.9, fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
-            snowColor: "#7fff52", snowCount: 150, snowSize: 3, snowSpeed: 1.6
-        },
-        sunset_sorbet: {
-            bg: "#3b0f1c", header: "#5c1830", text: "#ffeef5", muted: "#ffbfd5",
-            accent: "#ff668f", accentDark: "#b33252", glowColor: "#ff9cb5", cardBg: "#471427",
-            cardRadius: 15, glowSize: 30, glowStrength: 0.5, fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
-            snowColor: "#ffb6ce", snowCount: 120, snowSize: 3, snowSpeed: 1.3
-        },
-        cafe_mocha: {
-            bg: "#2a1a10", header: "#3b2415", text: "#ffe8d8", muted: "#d9c3b5",
-            accent: "#b87445", accentDark: "#7c4c2d", glowColor: "#d8a986", cardBg: "#351f13",
-            cardRadius: 12, glowSize: 18, glowStrength: 0.38, fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
-            snowColor: "#c59c7a", snowCount: 60, snowSize: 4, snowSpeed: 0.9
-        },
-        aqua_wave: {
-            bg: "#001a26", header: "#003344", text: "#dcf8ff", muted: "#b9e6f2",
-            accent: "#3ddcff", accentDark: "#117d99", glowColor: "#8af0ff", cardBg: "#002a38",
-            cardRadius: 16, glowSize: 26, glowStrength: 0.58, fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
-            snowColor: "#a8f6ff", snowCount: 140, snowSize: 3, snowSpeed: 1.4
-        },
-        moonlight_silver: {
-            bg: "#0f0f14", header: "#1a1a22", text: "#f2f2f6", muted: "#bcbcc6",
-            accent: "#9ea4ff", accentDark: "#5056c8", glowColor: "#c4c7ff", cardBg: "#16161d",
-            cardRadius: 12, glowSize: 28, glowStrength: 0.5, fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
-            snowColor: "#d3d6ff", snowCount: 120, snowSize: 3, snowSpeed: 1.2
-        },
-        jungle_mist: {
-            bg: "#0b1f12", header: "#153423", text: "#e8ffe8", muted: "#cceccc",
-            accent: "#66ff8c", accentDark: "#27994a", glowColor: "#99ffc0", cardBg: "#102a1a",
-            cardRadius: 14, glowSize: 22, glowStrength: 0.43, fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
-            snowColor: "#b6ffd2", snowCount: 90, snowSize: 3, snowSpeed: 1.3
-        },
-        ocean_dusk: {
-            bg: "#001224", header: "#002544", text: "#dff2ff", muted: "#b8d7e6",
-            accent: "#6cb8ff", accentDark: "#2c6ba3", glowColor: "#a3d7ff", cardBg: "#001d33",
-            cardRadius: 18, glowSize: 24, glowStrength: 0.45, fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
-            snowColor: "#bcdfff", snowCount: 160, snowSize: 2, snowSpeed: 1.1
-        },
-        pink_frost: {
-            bg: "#2b0d1f", header: "#471634", text: "#ffdff5", muted: "#f1b9d8",
-            accent: "#ff7ec4", accentDark: "#b24284", glowColor: "#ffb2dc", cardBg: "#3b122a",
-            cardRadius: 16, glowSize: 34, glowStrength: 0.6, fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
-            snowColor: "#ffc2e6", snowCount: 150, snowSize: 3, snowSpeed: 1.5
-        },
-        techno_grid: {
-            bg: "#0a0a0f", header: "#15151f", text: "#e3e9ff", muted: "#b7c0e6",
-            accent: "#40bbff", accentDark: "#1778a3", glowColor: "#89d8ff", cardBg: "#12121a",
-            cardRadius: 12, glowSize: 36, glowStrength: 0.75, fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
-            snowColor: "#66ccff", snowCount: 180, snowSize: 3, snowSpeed: 1.6
-        },
-        sunny_field: {
-            bg: "#fff8d9", header: "#ffeeb3", text: "#663e00", muted: "#8c5c1a",
-            accent: "#ffcc33", accentDark: "#c78a00", glowColor: "#ffe57a", cardBg: "#fff1bf",
-            cardRadius: 20, glowSize: 20, glowStrength: 0.35, fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
-            snowColor: "#ffe28a", snowCount: 50, snowSize: 4, snowSpeed: 0.9
-        },
-        mint_leaf: {
-            bg: "#e6fff4", header: "#c6ffe6", text: "#004d33", muted: "#267359",
-            accent: "#33ffb8", accentDark: "#0fa36e", glowColor: "#8cffd7", cardBg: "#d2ffe8",
-            cardRadius: 18, glowSize: 18, glowStrength: 0.32, fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
-            snowColor: "#a0ffe6", snowCount: 40, snowSize: 5, snowSpeed: 0.7
-        },
-        void_shadow: {
-            bg: "#000000", header: "#0a0a0a", text: "#e6e6e6", muted: "#999999",
-            accent: "#5a5a5a", accentDark: "#2a2a2a", glowColor: "#bbbbbb", cardBg: "#080808",
-            cardRadius: 10, glowSize: 40, glowStrength: 0.8, fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
-            snowColor: "#cccccc", snowCount: 200, snowSize: 2, snowSpeed: 1.2
-        },
-        ruby_crystal: {
-            bg: "#290001", header: "#400002", text: "#ffe5e8", muted: "#ffb3bb",
-            accent: "#ff3355", accentDark: "#a30024", glowColor: "#ff8899", cardBg: "#320002",
-            cardRadius: 14, glowSize: 32, glowStrength: 0.6, fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
-            snowColor: "#ff99aa", snowCount: 130, snowSize: 3, snowSpeed: 1.6
-        },
-        arctic_bloom: {
-            bg: "#f2fcff", header: "#dff8ff", text: "#004f63", muted: "#1b6e84",
-            accent: "#53dfff", accentDark: "#0c8ba3", glowColor: "#9eeeff", cardBg: "#e7f9ff",
-            cardRadius: 18, glowSize: 18, glowStrength: 0.3, fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
-            snowColor: "#bbf2ff", snowCount: 60, snowSize: 4, snowSpeed: 0.9
-        },
-        honey_glow: {
-            bg: "#2a1900", header: "#412600", text: "#ffefcc", muted: "#ddc7a1",
-            accent: "#ffb300", accentDark: "#a67300", glowColor: "#ffd677", cardBg: "#352000",
-            cardRadius: 12, glowSize: 26, glowStrength: 0.46, fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
-            snowColor: "#ffcf87", snowCount: 100, snowSize: 3, snowSpeed: 1.2
-        },
-        acid_punch: {
-            bg: "#12001a", header: "#260033", text: "#ffe6ff", muted: "#d9b3e6",
-            accent: "#ff00cc", accentDark: "#99007a", glowColor: "#ff80dd", cardBg: "#1c0026",
-            cardRadius: 16, glowSize: 38, glowStrength: 0.72, fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
-            snowColor: "#ffaae8", snowCount: 150, snowSize: 3, snowSpeed: 1.5
-        },
-        arctic_night: {
-            bg: "#06080f", header: "#0b1120", text: "#dde6ff", muted: "#a7b4d9",
-            accent: "#5577ff", accentDark: "#2a3c99", glowColor: "#9bb5ff", cardBg: "#090d14",
-            cardRadius: 10, glowSize: 27, glowStrength: 0.55, fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
-            snowColor: "#c3d2ff", snowCount: 170, snowSize: 3, snowSpeed: 1.4
-        },
-        rainforest_dew: {
-            bg: "#0d1f17", header: "#123026", text: "#e0fff3", muted: "#bee6d8",
-            accent: "#4cffac", accentDark: "#1d8f64", glowColor: "#92ffd3", cardBg: "#102a20",
-            cardRadius: 14, glowSize: 24, glowStrength: 0.42, fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
-            snowColor: "#b6ffe1", snowCount: 100, snowSize: 3, snowSpeed: 1.2
-        },
-        candy_arcade: {
-            bg: "#230011", header: "#3b001b", text: "#ffebf3", muted: "#ffc4db",
-            accent: "#ff4fa4", accentDark: "#a30062", glowColor: "#ff9bcf", cardBg: "#310016",
-            cardRadius: 18, glowSize: 36, glowStrength: 0.7, fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
-            snowColor: "#ffb4da", snowCount: 140, snowSize: 3, snowSpeed: 1.5
-        },
-        obsidian_gold: {
-            bg: "#0a0905", header: "#1a180f", text: "#f7e7bf", muted: "#d4c193",
-            accent: "#e6b400", accentDark: "#9c7d00", glowColor: "#ffe680", cardBg: "#12110a",
-            cardRadius: 12, glowSize: 28, glowStrength: 0.55, fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
-            snowColor: "#f5d97c", snowCount: 100, snowSize: 3, snowSpeed: 1.3
-        },
-        glacial_berry: {
-            bg: "#1e0033", header: "#32004f", text: "#f4e6ff", muted: "#d4b3f7",
-            accent: "#bf59ff", accentDark: "#7826a6", glowColor: "#d9a3ff", cardBg: "#290041",
-            cardRadius: 15, glowSize: 33, glowStrength: 0.6, fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
-            snowColor: "#e7c3ff", snowCount: 145, snowSize: 3, snowSpeed: 1.5
-        },
-        lavender_fade: {
-            bg: "#f4edff", header: "#e9ddff", text: "#3b2b66", muted: "#695a91",
-            accent: "#b899ff", accentDark: "#6f59b3", glowColor: "#d2c2ff", cardBg: "#ede3ff",
-            cardRadius: 20, glowSize: 20, glowStrength: 0.33, fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
-            snowColor: "#d8caff", snowCount: 60, snowSize: 4, snowSpeed: 0.8
-        }
-    };
+// ============================================
+// IMAGE LOADING WITH FALLBACKS
+// ============================================
 
-    let currentTheme = localStorage.getItem('selectedTheme') || 'midnight_blossom';
-
-    function applyTheme(themeName) {
-        const theme = themes[themeName];
-        if (!theme) return;
-        
-        const root = document.documentElement;
-        
-        // Apply all theme properties
-        root.style.setProperty('--bg', theme.bg);
-        root.style.setProperty('--header', theme.header);
-        root.style.setProperty('--text', theme.text);
-        root.style.setProperty('--muted', theme.muted);
-        root.style.setProperty('--accent', theme.accent);
-        root.style.setProperty('--accentDark', theme.accentDark);
-        root.style.setProperty('--glowColor', theme.glowColor);
-        root.style.setProperty('--cardBg', theme.cardBg);
-        root.style.setProperty('--cardRadius', theme.cardRadius + 'px');
-        root.style.setProperty('--glowSize', theme.glowSize + 'px');
-        root.style.setProperty('--glowStrength', theme.glowStrength);
-        root.style.setProperty('--fontFamily', theme.fontFamily);
-        root.style.setProperty('--snowColor', theme.snowColor);
-        root.style.setProperty('--snowCount', theme.snowCount);
-        root.style.setProperty('--snowSize', theme.snowSize);
-        root.style.setProperty('--snowSpeed', theme.snowSpeed);
-        
-        currentTheme = themeName;
-        localStorage.setItem('selectedTheme', themeName);
-        
-        // Recreate snow effect with new theme settings
-        createSnowEffect();
-    }
-
-    function renderThemeGrid() {
-        const grid = document.getElementById('themeGrid');
-        grid.innerHTML = Object.keys(themes).map(name => {
-            const theme = themes[name];
-            const active = name === currentTheme ? 'active' : '';
-            const displayName = name.split('_').map(word => 
-                word.charAt(0).toUpperCase() + word.slice(1)
-            ).join(' ');
-            
-            return `
-                <div class="theme-option ${active}" 
-                     style="background: ${theme.bg}; border-color: ${theme.accent}; color: ${theme.text};"
-                     onclick="applyTheme('${name}'); renderThemeGrid();">
-                    ${displayName}
-                </div>
-            `;
-        }).join('');
-    }
-
-    // [REST OF YOUR JAVASCRIPT CODE CONTINUES HERE - all the other functions]
-    // ... (keep all your other functions like saveTeacherLink, filterGames, etc.)
-    // Teacher Link
-    function saveTeacherLink() {
-        const input = document.getElementById('teacherLinkInput');
-        localStorage.setItem('teacherLink', input.value);
-        alert('Teacher link saved!');
-    }
-
-    function loadTeacherLink() {
-        const saved = localStorage.getItem('teacherLink');
-        if (saved) {
-            document.getElementById('teacherLinkInput').value = saved;
-        }
-    }
-
-    function openTeacherLink() {
-        const link = localStorage.getItem('teacherLink');
-        if (link) {
-            window.open(link, '_blank');
+function loadImageWithFallback(imgElement, coverFile, gameName) {
+    const urls = CDN_CONFIG.getAllCoverURLs(coverFile);
+    let currentIndex = 0;
+    
+    function tryNextURL() {
+        if (currentIndex < urls.length) {
+            imgElement.src = urls[currentIndex];
+            currentIndex++;
         } else {
-            alert('No teacher link saved. Please set one first.');
+            // All URLs failed - show placeholder
+            showPlaceholder(imgElement, gameName);
         }
     }
-
-    // Tab Customization
-    function saveTabCustomization() {
-        const title = document.getElementById('tabTitleInput').value;
-        const icon = document.getElementById('tabIconInput').value;
-        
-        if (title) {
-            document.title = title;
-            localStorage.setItem('customTabTitle', title);
-        }
-        
-        if (icon) {
-            let link = document.querySelector("link[rel*='icon']");
-            if (!link) {
-                link = document.createElement('link');
-                link.rel = 'icon';
-                document.head.appendChild(link);
-            }
-            link.href = icon;
-            localStorage.setItem('customTabIcon', icon);
-        }
-        
-        alert('Tab customization applied!');
-    }
-
-    function loadTabCustomization() {
-        const title = localStorage.getItem('customTabTitle');
-        const icon = localStorage.getItem('customTabIcon');
-        
-        if (title) {
-            document.title = title;
-            document.getElementById('tabTitleInput').value = title;
-        }
-        
-        if (icon) {
-            let link = document.querySelector("link[rel*='icon']");
-            if (!link) {
-                link = document.createElement('link');
-                link.rel = 'icon';
-                document.head.appendChild(link);
-            }
-            link.href = icon;
-            document.getElementById('tabIconInput').value = icon;
-        }
-    }
-
-    function resetTabCustomization() {
-        localStorage.removeItem('customTabTitle');
-        localStorage.removeItem('customTabIcon');
-        document.title = 'Game Launcher';
-        document.getElementById('tabTitleInput').value = '';
-        document.getElementById('tabIconInput').value = '';
-        
-        let link = document.querySelector("link[rel*='icon']");
-        if (link) {
-            link.href = '';
-        }
-        
-        alert('Tab customization reset!');
-    }
-
-    // Bible verses
-    const verses = [
-        { text: "I can do all things through Christ who strengthens me.", ref: "Philippians 4:13" },
-        { text: "For God so loved the world that he gave his one and only Son.", ref: "John 3:16" },
-        { text: "Trust in the Lord with all your heart.", ref: "Proverbs 3:5" },
-        { text: "The Lord is my shepherd; I shall not want.", ref: "Psalm 23:1" },
-        { text: "Be strong and courageous. Do not be afraid.", ref: "Joshua 1:9" }
-    ];
-
-    function getRandomVerse() {
-        return verses[Math.floor(Math.random() * verses.length)];
-    }
-
-    // Keyboard shortcuts
-    document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape') {
-            const gameContainer = document.getElementById('game-container');
-            if (gameContainer.style.display === 'flex') {
-                closeGame();
-            }
-        }
-        
-        if (e.key === 'F11') {
-            const gameContainer = document.getElementById('game-container');
-            if (gameContainer.style.display === 'flex') {
-                e.preventDefault();
-                toggleFullscreen();
-            }
-        }
-    });
-
-    // Snow animation
-    function createSnowEffect() {
-        const canvas = document.getElementById('snowCanvas');
+    
+    function showPlaceholder(img, name) {
+        // Create a canvas-based placeholder
+        const canvas = document.createElement('canvas');
+        canvas.width = 160;
+        canvas.height = 120;
         const ctx = canvas.getContext('2d');
         
-        canvas.width = window.innerWidth;
-        canvas.height = window.innerHeight;
+        // Gradient background
+        const gradient = ctx.createLinearGradient(0, 0, 160, 120);
+        gradient.addColorStop(0, getComputedStyle(document.documentElement).getPropertyValue('--accentDark') || '#cc0000');
+        gradient.addColorStop(1, getComputedStyle(document.documentElement).getPropertyValue('--accent') || '#ff0000');
+        ctx.fillStyle = gradient;
+        ctx.fillRect(0, 0, 160, 120);
         
-        const snowflakes = [];
-        const snowCount = 150;
-        const snowSize = 3;
-        const snowSpeed = 1.2;
+        // Game name initial or emoji
+        ctx.fillStyle = '#ffffff';
+        ctx.font = 'bold 48px Arial';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(name ? name.charAt(0).toUpperCase() : '🎮', 80, 60);
         
-        class Snowflake {
-            constructor() {
-                this.reset();
-            }
-            
-            reset() {
-                this.x = Math.random() * canvas.width;
-                this.y = Math.random() * canvas.height - canvas.height;
-                this.size = Math.random() * snowSize + 1;
-                this.speed = Math.random() * snowSpeed + 0.5;
-                this.wind = Math.random() * 0.5 - 0.25;
-            }
-            
-            update() {
-                this.y += this.speed;
-                this.x += this.wind;
-                
-                if (this.y > canvas.height) {
-                    this.reset();
-                    this.y = -10;
-                }
-                
-                if (this.x > canvas.width) {
-                    this.x = 0;
-                } else if (this.x < 0) {
-                    this.x = canvas.width;
-                }
-            }
-            
-            draw() {
-                ctx.fillStyle = '#ffffff';
-                ctx.beginPath();
-                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-                ctx.fill();
-            }
-        }
-        
-        for (let i = 0; i < snowCount; i++) {
-            snowflakes.push(new Snowflake());
-        }
-        
-        function animate() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            snowflakes.forEach(flake => {
-                flake.update();
-                flake.draw();
-            });
-            requestAnimationFrame(animate);
-        }
-        
-        animate();
-        
-        window.addEventListener('resize', () => {
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
-        });
-    }
-
-    createSnowEffect();
-
-    // Tab switching
-    function switchTab(tabName) {
-        document.querySelectorAll('.content').forEach(c => c.classList.remove('active'));
-        document.querySelectorAll('.sidebar-item').forEach(i => i.classList.remove('active'));
-        
-        document.getElementById(tabName).classList.add('active');
-        document.getElementById(tabName + 'Item').classList.add('active');
-        
-    }
-
-
-    // Search functionality
-    function filterGames() {
-        const input = document.getElementById('searchBox').value.toLowerCase();
-        
-        if (input === '') {
-            document.getElementById('searchBox').value = '';
-            return;
-        }
-        
-        const filtered = games.filter(g => g.name.toLowerCase().includes(input));
-        
-        if (filtered.length === 0) {
-            document.getElementById('noResults').style.display = 'block';
-            document.getElementById('gameSections').style.display = 'none';
-            document.getElementById('alphabetNav').style.display = 'none';
-        } else {
-            document.getElementById('noResults').style.display = 'none';
-            document.getElementById('gameSections').style.display = 'block';
-            document.getElementById('alphabetNav').style.display = 'flex';
-            renderGameSections(filtered);
-        }
-    }
-
-    function clearSearch() {
-        document.getElementById('searchBox').value = '';
-        document.getElementById('noResults').style.display = 'none';
-        document.getElementById('gameSections').style.display = 'block';
-        document.getElementById('alphabetNav').style.display = 'flex';
-        renderGameSections();
-    }
-
-    // GitHub fetching
-    async function fetchWithFallback(filename) {
-        const urls = [
-            `https://cdn.jsdelivr.net/gh/${GITHUB_USER}/${GITHUB_REPO}@${GITHUB_BRANCH}/${filename}`,
-            `https://raw.githubusercontent.com/${GITHUB_USER}/${GITHUB_REPO}/${GITHUB_BRANCH}/${filename}`,
-            `https://${GITHUB_USER}.github.io/${GITHUB_REPO}/${filename}`
-        ];
-
-        for (let i = 0; i < urls.length; i++) {
-            try {
-                const response = await fetch(urls[i] + `?t=${Date.now()}`);
-                if (response.ok) {
-                    return await response.text();
-                }
-            } catch (err) {
-                if (i === urls.length - 1) throw err;
-            }
-        }
-        throw new Error('All methods failed');
-    }
-
-    async function fetchGames() {
-        // Load games from JSON array
-        games = GAMES_JSON.map(game => ({
-            ...game,
-            // cover is already correct from template literal
-            isExternal: game.url && (game.url.startsWith('http://') || game.url.startsWith('https://'))
-        }));
-
-        console.log(`✓ Loaded ${games.length} games`);
-    }
-
-    // Render alphabet navigation
-    function renderAlphabetNav() {
-        const container = document.getElementById('alphabetNav');
-        const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
-        const grouped = groupGamesByLetter();
-        
-        container.innerHTML = alphabet.map(letter => {
-            const disabled = !grouped[letter] ? 'disabled' : '';
-            return `<div class="alphabet-letter ${disabled}" onclick="scrollToLetter('${letter}')">${letter}</div>`;
-        }).join('');
-    }
-
-    function scrollToLetter(letter) {
-        const element = document.getElementById(`section-${letter}`);
-        if (element) {
-            element.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        }
-    }
-
-    function groupGamesByLetter(gameList = games) {
-        const grouped = {};
-        gameList.forEach(game => {
-            const first = game.name.charAt(0).toUpperCase();
-            if (!grouped[first]) grouped[first] = [];
-            grouped[first].push(game);
-        });
-        return grouped;
-    }
-
-    function renderGameSections(gameList = games) {
-        console.log('renderGameSections called with', gameList.length, 'games');
-        const container = document.getElementById('gameSections');
-        console.log('Container element:', container);
-        const grouped = groupGamesByLetter(gameList);
-        const letters = Object.keys(grouped).sort();
-        console.log('Grouped into', letters.length, 'letters:', letters.join(', '));
-        
-        if (letters.length === 0) {
-            container.innerHTML = '';
-            return;
-        }
-        
-        container.innerHTML = letters.map(letter => `
-            <div id="section-${letter}">
-                <div class="section-title">📁 ${letter}</div>
-                <div class="game-grid">
-                    ${grouped[letter].map(game => {
-                        const coverImg = game.cover && !game.cover.includes('undefined') 
-                            ? `<img src="${game.cover}" class="game-cover" onerror="this.outerHTML='<div class=\\'game-cover placeholder\\'>🎮</div>'">`
-                            : `<div class="game-cover placeholder">🎮</div>`;
-                        
-                        const author = game.author ? `<div class="game-author">by ${game.author}</div>` : '';
-                        const externalBadge = game.isExternal ? '<div class="external-link-badge">🔗 External</div>' : '';
-                        const action = game.isExternal ? `window.open('${game.url}', '_blank')` : `window.loadGame('${game.url}', '${game.name.replace(/'/g, "\\'")}')`;
-                        
-                        return `
-                            <div class="game-card" onclick="${action}">
-                                ${externalBadge}
-                                ${coverImg}
-                                <div class="game-info">
-                                    <h3>${game.name}</h3>
-                                    ${author}
-                                    <p>${game.isExternal ? 'Opens in new tab' : 'Click to play'}</p>
-                                </div>
-                            </div>
-                        `;
-                    }).join('')}
-                </div>
-            </div>
-        `).join('');
-        
-        // Update alphabet navigation
-        document.querySelectorAll('.alphabet-letter').forEach(letter => {
-            const letterChar = letter.textContent;
-            if (grouped[letterChar]) {
-                letter.classList.remove('disabled');
-            } else {
-                letter.classList.add('disabled');
-            }
-        });
-        
-        document.getElementById('noResults').style.display = 'none';
-    }
-
-
-    // ===== GAME STORAGE PERSISTENCE SYSTEM =====
-    // This system saves game data automatically so player progress isn't lost
-    
-    const STORAGE_PREFIX = 'game_data_';
-    const AUTO_SAVE_INTERVAL = 30000; // Auto-save every 30 seconds
-    let autoSaveTimer = null;
-    
-    // Storage bridge code to inject into games
-    const storageInjectionCode = '<script>' + 
-    '(function() {' +
-        'const gameKey = window.location.pathname + "_" + window.location.search;' +
-        'const storageKey = "game_save_" + btoa(gameKey).replace(/=/g, "");' +
-        '' +
-        '// Load saved data on page load' +
-        'const savedData = localStorage.getItem(storageKey);' +
-        'if (savedData) {' +
-            'try {' +
-                'const parsed = JSON.parse(savedData);' +
-                'Object.keys(parsed).forEach(function(key) {' +
-                    'if (key !== storageKey) {' +
-                        'localStorage.setItem(key, parsed[key]);' +
-                    '}' +
-                '});' +
-                'console.log("[Storage Bridge] Game data restored");' +
-            '} catch (e) {' +
-                'console.warn("[Storage Bridge] Failed to restore data:", e);' +
-            '}' +
-        '}' +
-        '' +
-        '// Override localStorage.setItem to auto-save' +
-        'const originalSetItem = localStorage.setItem;' +
-        'localStorage.setItem = function(key, value) {' +
-            'originalSetItem.call(localStorage, key, value);' +
-            'const allData = {};' +
-            'for (let i = 0; i < localStorage.length; i++) {' +
-                'const k = localStorage.key(i);' +
-                'if (k && !k.startsWith("game_save_")) {' +
-                    'allData[k] = localStorage.getItem(k);' +
-                '}' +
-            '}' +
-            'originalSetItem.call(localStorage, storageKey, JSON.stringify(allData));' +
-        '};' +
-        '' +
-        '// Also handle sessionStorage' +
-        'const sessionKey = "game_session_" + btoa(gameKey).replace(/=/g, "");' +
-        'const savedSession = sessionStorage.getItem(sessionKey);' +
-        'if (savedSession) {' +
-            'try {' +
-                'const parsed = JSON.parse(savedSession);' +
-                'Object.keys(parsed).forEach(function(key) {' +
-                    'if (key !== sessionKey) {' +
-                        'sessionStorage.setItem(key, parsed[key]);' +
-                    '}' +
-                '});' +
-            '} catch (e) {}' +
-        '}' +
-        '' +
-        'const originalSessionSetItem = sessionStorage.setItem;' +
-        'sessionStorage.setItem = function(key, value) {' +
-            'originalSessionSetItem.call(sessionStorage, key, value);' +
-            'const allData = {};' +
-            'for (let i = 0; i < sessionStorage.length; i++) {' +
-                'const k = sessionStorage.key(i);' +
-                'if (k && !k.startsWith("game_session_")) {' +
-                    'allData[k] = sessionStorage.getItem(k);' +
-                '}' +
-            '}' +
-            'originalSessionSetItem.call(sessionStorage, sessionKey, JSON.stringify(allData));' +
-        '};' +
-        '' +
-        '// Periodic auto-save' +
-        'setInterval(function() {' +
-            'const allData = {};' +
-            'for (let i = 0; i < localStorage.length; i++) {' +
-                'const k = localStorage.key(i);' +
-                'if (k && !k.startsWith("game_save_")) {' +
-                    'allData[k] = localStorage.getItem(k);' +
-                '}' +
-            '}' +
-            'if (Object.keys(allData).length > 0) {' +
-                'localStorage.setItem(storageKey, JSON.stringify(allData));' +
-            '}' +
-        '}, 5000);' +
-        '' +
-        'console.log("[Storage Bridge] Initialized for game");' +
-    '})();' +
-    '</' + 'script>';
-    
-    // Show save notification
-    function showSaveNotification(message = '💾 Game Progress Saved!', isAuto = false) {
-        const notification = document.getElementById('saveNotification');
-        notification.textContent = message;
-        notification.classList.add('show');
-        
-        setTimeout(() => {
-            notification.style.animation = 'slideOut 0.3s ease-out';
-            setTimeout(() => {
-                notification.classList.remove('show');
-                notification.style.animation = '';
-            }, 300);
-        }, isAuto ? 2000 : 3000);
+        img.src = canvas.toDataURL();
+        img.classList.add('placeholder-generated');
     }
     
-    // Save game state manually
-    function saveGameState() {
-        const frame = document.getElementById('game-frame');
-        if (!frame || !frame.contentWindow) {
-            alert('No game is currently loaded');
-            return;
-        }
-        
-        try {
-            // Trigger a manual save in the iframe
-            const frameWindow = frame.contentWindow;
-            const gameKey = frameWindow.location.pathname + '_' + frameWindow.location.search;
-            const storageKey = 'game_save_' + btoa(gameKey).replace(/=/g, '');
-            
-            // Collect all localStorage data from the iframe
-            const allData = {};
-            const frameStorage = frameWindow.localStorage;
-            for (let i = 0; i < frameStorage.length; i++) {
-                const key = frameStorage.key(i);
-                if (key && !key.startsWith('game_save_')) {
-                    allData[key] = frameStorage.getItem(key);
-                }
-            }
-            
-            if (Object.keys(allData).length > 0) {
-                frameStorage.setItem(storageKey, JSON.stringify(allData));
-                
-                // Also save to parent window's localStorage as backup
-                const backupKey = STORAGE_PREFIX + currentGame.filename;
-                localStorage.setItem(backupKey, JSON.stringify(allData));
-                
-                // Show save button feedback
-                const saveBtn = document.getElementById('saveBtn');
-                const originalText = saveBtn.textContent;
-                saveBtn.textContent = '✓ Saved!';
-                saveBtn.style.background = '#00ff00';
-                setTimeout(() => {
-                    saveBtn.textContent = originalText;
-                    saveBtn.style.background = '';
-                }, 2000);
-                
-                // Show notification
-                showSaveNotification('💾 Game Progress Saved!', false);
-                
-                console.log('Game state saved successfully');
-            } else {
-                alert('No game data to save yet. Play the game first!');
-            }
-        } catch (e) {
-            console.error('Save failed:', e);
-            alert('Could not save game data. Make sure the game has started.');
-        }
-    }
-    
-    // Auto-save functionality
-    function startAutoSave() {
-        if (autoSaveTimer) clearInterval(autoSaveTimer);
-        
-        autoSaveTimer = setInterval(() => {
-            const frame = document.getElementById('game-frame');
-            if (frame && frame.contentWindow && currentGame.filename) {
-                try {
-                    // Do the save
-                    const frameWindow = frame.contentWindow;
-                    const gameKey = frameWindow.location.pathname + '_' + frameWindow.location.search;
-                    const storageKey = 'game_save_' + btoa(gameKey).replace(/=/g, '');
-                    
-                    const allData = {};
-                    const frameStorage = frameWindow.localStorage;
-                    for (let i = 0; i < frameStorage.length; i++) {
-                        const key = frameStorage.key(i);
-                        if (key && !key.startsWith('game_save_')) {
-                            allData[key] = frameStorage.getItem(key);
-                        }
-                    }
-                    
-                    if (Object.keys(allData).length > 0) {
-                        frameStorage.setItem(storageKey, JSON.stringify(allData));
-                        const backupKey = STORAGE_PREFIX + currentGame.filename;
-                        localStorage.setItem(backupKey, JSON.stringify(allData));
-                        
-                        // Show auto-save notification
-                        showSaveNotification('💾 Auto-Saved!', true);
-                        console.log('Auto-save completed');
-                    }
-                } catch (e) {
-                    console.log('Auto-save skipped:', e.message);
-                }
-            }
-        }, AUTO_SAVE_INTERVAL);
-    }
-    
-    function stopAutoSave() {
-        if (autoSaveTimer) {
-            clearInterval(autoSaveTimer);
-            autoSaveTimer = null;
-        }
-    }
-
-    // Game loading
-    // Game loading
-    async function loadGame(filename, title) {
-        console.log('loadGame called with:', filename, title);
-        
-        currentGame = { filename, title };
-        const loader = document.getElementById('game-loader');
-        const container = document.getElementById('game-container');
-        const frame = document.getElementById('game-frame');
-        const gameTitle = document.getElementById('currentGameTitle');
-
-        const verse = getRandomVerse();
-        document.getElementById('verseText').textContent = '"' + verse.text + '"';
-        document.getElementById('verseReference').textContent = '- ' + verse.ref;
-
-        gameTitle.textContent = title;
-        loader.style.display = 'flex';
-        container.style.display = 'none';
-
-        const baseUrl = 'https://cdn.jsdelivr.net/gh/' + GITHUB_USER + '/' + GITHUB_REPO + '@' + GITHUB_BRANCH + '/';
-        const fullUrl = baseUrl + filename;
-        
-        console.log('Fetching game HTML from:', fullUrl);
-
-        try {
-            const response = await fetch(fullUrl);
-            const htmlContent = await response.text();
-            
-            console.log('Fetched HTML, length:', htmlContent.length);
-            
-            const blob = new Blob([htmlContent], { type: 'text/html' });
-            const blobUrl = URL.createObjectURL(blob);
-            
-            console.log('Created blob URL:', blobUrl);
-            
-            frame.onload = function() {
-                console.log('Game loaded successfully');
-                loader.style.display = 'none';
-                container.style.display = 'block';
-            };
-
-            frame.onerror = function(e) {
-                console.error('Frame error:', e);
-                loader.style.display = 'none';
-                container.style.display = 'block';
-            };
-
-            frame.src = blobUrl;
-            
-            // Fallback timeout
-            setTimeout(function() {
-                if (loader.style.display !== 'none') {
-                    console.log('Showing game after timeout');
-                    loader.style.display = 'none';
-                    container.style.display = 'block';
-                }
-            }, 5000);
-            
-        } catch (error) {
-            console.error('Failed to load game:', error);
-            loader.style.display = 'none';
-            alert('Failed to load game: ' + error.message);
-        }
-    }
-
-    function reloadGame() {
-        if (currentGame.filename) {
-            loadGame(currentGame.filename, currentGame.title);
-        }
-    }
-
-    function toggleFullscreen() {
-        const gameContainer = document.getElementById('game-container');
-        const gameFrame = document.getElementById('game-frame');
-        const btn = document.getElementById('fullscreenBtn');
-        const hint = document.getElementById('fullscreenHint');
-
-        if (!document.fullscreenElement && !document.webkitFullscreenElement &&
-            !document.mozFullScreenElement && !document.msFullscreenElement) {
-            
-            // Try to fullscreen the container (this will hide the header via CSS)
-            const requestFullscreen = gameContainer.requestFullscreen || 
-                                     gameContainer.webkitRequestFullscreen || 
-                                     gameContainer.mozRequestFullScreen || 
-                                     gameContainer.msRequestFullscreen;
-            
-            if (requestFullscreen) {
-                requestFullscreen.call(gameContainer).then(() => {
-                    // Fullscreen successful
-                    btn.textContent = '⛶ Exit Fullscreen';
-                    hint.classList.add('show');
-                    setTimeout(() => hint.classList.remove('show'), 3000);
-                }).catch(err => {
-                    console.error('Fullscreen failed:', err);
-                    alert('Fullscreen failed. Try using F11 or the game\'s built-in fullscreen button.');
-                });
-            }
-        } else {
-            const exitFullscreen = document.exitFullscreen || 
-                                  document.webkitExitFullscreen || 
-                                  document.mozCancelFullScreen || 
-                                  document.msExitFullscreen;
-            
-            if (exitFullscreen) {
-                exitFullscreen.call(document);
-                btn.textContent = '⛶ Fullscreen';
-            }
-        }
-    }
-
-    document.addEventListener('fullscreenchange', updateFullscreenButton);
-    document.addEventListener('webkitfullscreenchange', updateFullscreenButton);
-    document.addEventListener('mozfullscreenchange', updateFullscreenButton);
-    document.addEventListener('MSFullscreenChange', updateFullscreenButton);
-
-    function updateFullscreenButton() {
-        const btn = document.getElementById('fullscreenBtn');
-        const inFull = document.fullscreenElement || document.webkitFullscreenElement ||
-                        document.mozFullScreenElement || document.msFullscreenElement;
-        btn.textContent = inFull ? '⛶ Exit Fullscreen' : '⛶ Fullscreen';
-    }
-
-    function closeGame() {
-        console.log('closeGame called');
-        
-        if (document.fullscreenElement || document.webkitFullscreenElement ||
-            document.mozFullScreenElement || document.msFullscreenElement) {
-            console.log('Exiting fullscreen...');
-            if (document.exitFullscreen) document.exitFullscreen();
-            else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
-            else if (document.mozCancelFullScreen) document.mozCancelFullScreen();
-            else if (document.msExitFullscreen) document.msExitFullscreen();
-        }
-
-        const container = document.getElementById('game-container');
-        const frame = document.getElementById('game-frame');
-        
-        console.log('Hiding game container...');
-        container.style.display = 'none';
-        frame.src = '';
-        currentGame = { filename: '', title: '' };
-        console.log('Game closed successfully');
-    }
-
-    // Initialization
-    async function initializeLauncher() {
-        console.log('initializeLauncher called!');
-        const loader = document.getElementById('initial-loader');
-        const main = document.getElementById('mainContent');
-        const gameCount = document.getElementById('gameCount');
-        const loadingText = loader.querySelector('.loading-text');
-
-        console.log('Elements:', { loader, main, gameCount, loadingText });
-
-        // Apply saved theme
-        applyTheme(currentTheme);
-        renderThemeGrid();
-        
-        // Load saved teacher link
-        loadTeacherLink();
-
-        // Load saved tab customization
-        loadTabCustomization();
-
-        try {
-            await fetchGames();
-            gameCount.textContent = `${games.length} Games Found!`;
-            loadingText.textContent = 'Loading games - use this wisely mostly during free time or lunch';
-
-            setTimeout(() => {
-                console.log('About to render games, games.length:', games.length);
-                renderAlphabetNav();
-                renderGameSections();
-                console.log('Finished rendering, showing main content');
-                loader.style.display = 'none';
-                main.style.display = 'block';
-            }, 1500);
-        } catch (e) {
-            loadingText.textContent = 'Error loading games';
-            gameCount.innerHTML = '<span style="color:#ff0000;">Failed to load games. Check configuration.</span>';
-            console.error(e);
-            setTimeout(() => {
-                loader.style.display = 'none';
-                main.style.display = 'block';
-            }, 2000);
-        }
-    }
-
-
-    // ===== NOTIFICATION SYSTEM =====
-    // Edit this array to add new notifications - they will automatically appear for users!
-   const NOTIFICATIONS = [
-    {
-        id: 'notif_20251210_003',
-        title: 'New Small Updates',
-        description: 'Added notification system and custom background uploader!',
-        fullContent: 'Hey everyone! Just pushed some small but useful updates:\n\n• Added a brand new notification/update system! Now you can easily see what\'s new in the launcher.\n\n• Added a custom background uploader! You can now personalize your launcher with your own background images. Just head to Settings to try it out!\n\nMore updates coming soon!',
-        type: 'update',
-        date: 'December 10, 2025',
-        timestamp: new Date('2025-12-10').getTime()
-    }
-    // Add more notifications here as you release updates!
-];
-
-    const NOTIFICATION_STORAGE_KEY = 'launcher_notifications_read';
-    const NOTIFICATION_VERSION_KEY = 'launcher_notification_version';
-    const CURRENT_NOTIFICATION_VERSION = '1.0'; // Increment this to force re-show all notifications
-
-    // Get read notifications from localStorage
-    function getReadNotifications() {
-        try {
-            const stored = localStorage.getItem(NOTIFICATION_STORAGE_KEY);
-            return stored ? JSON.parse(stored) : [];
-        } catch (e) {
-            return [];
-        }
-    }
-
-    // Save read notification
-    function markNotificationAsRead(notifId) {
-        const read = getReadNotifications();
-        if (!read.includes(notifId)) {
-            read.push(notifId);
-            localStorage.setItem(NOTIFICATION_STORAGE_KEY, JSON.stringify(read));
-        }
-        updateNotificationBadge();
-    }
-
-    // Mark all as read
-    function markAllAsRead() {
-        const allIds = NOTIFICATIONS.map(n => n.id);
-        localStorage.setItem(NOTIFICATION_STORAGE_KEY, JSON.stringify(allIds));
-        updateNotificationBadge();
-        renderNotifications();
-    }
-
-    // Get unread count
-    function getUnreadCount() {
-        const read = getReadNotifications();
-        return NOTIFICATIONS.filter(n => !read.includes(n.id)).length;
-    }
-
-    // Update badge
-    function updateNotificationBadge() {
-        const badge = document.getElementById('notifBadge');
-        const count = getUnreadCount();
-        
-        if (count > 0) {
-            badge.textContent = count;
-            badge.style.display = 'flex';
-        } else {
-            badge.style.display = 'none';
-        }
-    }
-
-    // Toggle notifications panel
-    function toggleNotifications() {
-        const panel = document.getElementById('notificationsPanel');
-        const overlay = document.getElementById('notificationsOverlay');
-        
-        if (panel.classList.contains('open')) {
-            panel.classList.remove('open');
-            overlay.classList.remove('active');
-        } else {
-            panel.classList.add('open');
-            overlay.classList.add('active');
-            renderNotifications();
-        }
-    }
-
-    // Expand/collapse notification
-    function toggleNotificationExpand(notifId) {
-        const item = document.getElementById(`notif-${notifId}`);
-        if (item) {
-            item.classList.toggle('expanded');
-            markNotificationAsRead(notifId);
-        }
-    }
-
-    // Calculate relative time
-    function getRelativeTime(timestamp) {
-        const now = Date.now();
-        const diff = now - timestamp;
-        const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-        
-        if (days === 0) return 'Today';
-        if (days === 1) return '1 day ago';
-        if (days < 7) return `${days} days ago`;
-        if (days < 30) return `${Math.floor(days / 7)} week(s) ago`;
-        if (days < 365) return `${Math.floor(days / 30)} month(s) ago`;
-        return `${Math.floor(days / 365)} year(s) ago`;
-    }
-
-    // Render notifications
-    function renderNotifications() {
-        const container = document.getElementById('notificationsContent');
-        const read = getReadNotifications();
-        
-        // Sort by date (newest first)
-        const sortedNotifications = [...NOTIFICATIONS].sort((a, b) => b.timestamp - a.timestamp);
-        
-        if (sortedNotifications.length === 0) {
-            container.innerHTML = `
-                <div class="notifications-empty">
-                    <h3>📭 No Notifications</h3>
-                    <p>You're all caught up!</p>
-                </div>
-            `;
-            return;
-        }
-        
-        container.innerHTML = sortedNotifications.map(notif => {
-            const isRead = read.includes(notif.id);
-            const typeClass = notif.type || 'update';
-            const typeLabel = typeClass.charAt(0).toUpperCase() + typeClass.slice(1);
-            const relativeTime = getRelativeTime(notif.timestamp);
-            
-            return `
-                <div class="notification-item ${isRead ? '' : 'unread'}" id="notif-${notif.id}">
-                    <div class="notification-header-content">
-                        <h3 class="notification-title">${notif.title}</h3>
-                        <div class="notification-type ${typeClass}">
-                            <span class="notification-type-dot"></span>
-                            ${typeLabel}
-                        </div>
-                    </div>
-                    <div class="notification-description">${notif.description}</div>
-                    ${notif.fullContent ? `
-                        <div class="notification-expand" onclick="toggleNotificationExpand('${notif.id}')">
-                            <span class="notification-expand-icon">▶</span> Read more
-                        </div>
-                        <div class="notification-full-content">
-                            ${notif.fullContent.replace(/\n/g, '<br>')}
-                        </div>
-                    ` : ''}
-                    <div class="notification-date">📅 ${notif.date} • ${relativeTime}</div>
-                </div>
-            `;
-        }).join('');
-        
-        updateNotificationBadge();
-    }
-
-    // Check notification version and reset if needed
-    function checkNotificationVersion() {
-        const storedVersion = localStorage.getItem(NOTIFICATION_VERSION_KEY);
-        if (storedVersion !== CURRENT_NOTIFICATION_VERSION) {
-            // New version - clear read notifications to show updates again
-            localStorage.removeItem(NOTIFICATION_STORAGE_KEY);
-            localStorage.setItem(NOTIFICATION_VERSION_KEY, CURRENT_NOTIFICATION_VERSION);
-        }
-    }
-
-    // Initialize notifications on page load
-    console.log('=== Starting initialization ===');
-    checkNotificationVersion();
-    updateNotificationBadge();
-
-    console.log('=== Calling initializeLauncher ===');
-    initializeLauncher();
-
-// UI Helper Functions
-function loadGames() {
-    const settingsPanel = document.getElementById('settingsPanel');
-    const notifPanel = document.getElementById('notificationsPanel');
-    const overlay = document.getElementById('notificationsOverlay');
-    
-    settingsPanel.classList.remove('open');
-    notifPanel.classList.remove('open');
-    overlay.classList.remove('active');
-    
-    document.querySelectorAll('.sidebar-item').forEach(i => i.classList.remove('active'));
-    document.getElementById('gamesItem').classList.add('active');
+    imgElement.onerror = tryNextURL;
+    tryNextURL();
 }
 
-function toggleSettings() {
-    const panel = document.getElementById('settingsPanel');
-    const notifPanel = document.getElementById('notificationsPanel');
-    const overlay = document.getElementById('notificationsOverlay');
-    
-    // Always close notifications when opening settings
-    notifPanel.classList.remove('open');
-    
-    if (panel.classList.contains('open')) {
-        panel.classList.remove('open');
-        overlay.classList.remove('active');
-    } else {
-        panel.classList.add('open');
-        overlay.classList.add('active');
-    }
-}
+// ============================================
+// GAME LOADING WITH CDN FALLBACKS
+// ============================================
 
-function applyCustomTheme() {
-    const bg = document.getElementById('bgColor').value;
-    const accent = document.getElementById('accentColor').value;
-    const text = document.getElementById('textColor').value;
-    const glow = document.getElementById('glowColor').value;
+async function loadGameWithFallback(filename, title) {
+    console.log('loadGame called with:', filename, title);
     
-    const customTheme = {
-        bg: bg,
-        header: bg,
-        text: text,
-        muted: text + 'cc',
-        accent: accent,
-        accentDark: accent,
-        glowColor: glow,
-        cardBg: bg,
-        cardRadius: 15,
-        glowSize: 20,
-        glowStrength: 0.4,
-        fontFamily: "'Arial', sans-serif",
-        snowColor: '#ffffff',
-        snowCount: 150,
-        snowSize: 3,
-        snowSpeed: 1.2
+    const loader = document.getElementById('game-loader');
+    const container = document.getElementById('game-container');
+    const frame = document.getElementById('game-frame');
+    const gameTitle = document.getElementById('currentGameTitle');
+    
+    // Show loading
+    if (gameTitle) gameTitle.textContent = title;
+    if (loader) loader.style.display = 'flex';
+    if (container) container.style.display = 'none';
+    
+    // Get all possible URLs
+    const urls = CDN_CONFIG.getAllContentURLs(filename);
+    
+    let htmlContent = null;
+    let successUrl = null;
+    
+    // Try each CDN
+    for (const url of urls) {
+        try {
+            console.log(`Trying to load game from: ${url}`);
+            const response = await fetch(url);
+            
+            if (response.ok) {
+                htmlContent = await response.text();
+                successUrl = url;
+                console.log(`✓ Game loaded from: ${url}`);
+                break;
+            }
+        } catch (e) {
+            console.warn(`✗ Failed to load from: ${url}`);
+            continue;
+        }
+    }
+    
+    if (!htmlContent) {
+        // All sources failed
+        if (loader) loader.style.display = 'none';
+        alert(`Unable to load "${title}". Your network may be blocking game content.\n\nTry:\n• Using mobile data\n• A different network\n• Asking IT to unblock cdn.jsdelivr.net`);
+        return;
+    }
+    
+    // Create blob and load
+    const blob = new Blob([htmlContent], { type: 'text/html' });
+    const blobUrl = URL.createObjectURL(blob);
+    
+    frame.onload = function() {
+        console.log('Game loaded successfully');
+        if (loader) loader.style.display = 'none';
+        if (container) container.style.display = 'block';
     };
     
-    applyTheme(customTheme);
-    localStorage.setItem('customTheme', JSON.stringify(customTheme));
-    currentTheme = 'custom';
-    localStorage.setItem('currentTheme', 'custom');
-}
-
-function resetTheme() {
-    currentTheme = 'default';
-    localStorage.setItem('currentTheme', 'default');
-    localStorage.removeItem('customTheme');
-    location.reload();
-}
-
-function uploadBackground() {
-    const input = document.getElementById('backgroundUpload');
-    const file = input.files[0];
+    frame.onerror = function(e) {
+        console.error('Frame error:', e);
+        if (loader) loader.style.display = 'none';
+        if (container) container.style.display = 'block';
+    };
     
-    if (file) {
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            document.body.style.backgroundImage = `url(${e.target.result})`;
+    frame.src = blobUrl;
+    
+    // Fallback timeout
+    setTimeout(function() {
+        if (loader && loader.style.display !== 'none') {
+            loader.style.display = 'none';
+            if (container) container.style.display = 'block';
+        }
+    }, 8000);
+}
+
+// ============================================
+// BACKGROUND TEMPLATES WITH FALLBACKS
+// ============================================
+
+async function fetchBackgroundTemplatesWithFallback() {
+    // GitHub API endpoints to try
+    const apiEndpoints = [
+        'https://api.github.com/repos/ProjectApex1243/Backrounds/contents/',
+        // Could add proxy endpoints here if needed
+    ];
+    
+    for (const endpoint of apiEndpoints) {
+        try {
+            const response = await fetch(endpoint);
+            const data = await response.json();
+            
+            if (Array.isArray(data)) {
+                // Get backgrounds with CDN fallback URLs
+                return data
+                    .filter(file => /\.(jpg|jpeg|png|gif|webp)$/i.test(file.name))
+                    .map(file => ({
+                        name: file.name.replace(/\.[^.]+$/, ''),
+                        // Provide multiple URLs for fallback
+                        urls: [
+                            file.download_url,
+                            `https://cdn.jsdelivr.net/gh/ProjectApex1243/Backrounds@master/${file.name}`,
+                            `https://rawcdn.githack.com/ProjectApex1243/Backrounds/master/${file.name}`,
+                            `https://cdn.statically.io/gh/ProjectApex1243/Backrounds@master/${file.name}`
+                        ],
+                        url: file.download_url,
+                        fullName: file.name
+                    }));
+            }
+        } catch (e) {
+            console.warn(`Failed to fetch backgrounds from ${endpoint}:`, e);
+            continue;
+        }
+    }
+    
+    console.error('All background API endpoints blocked');
+    return [];
+}
+
+// Modified background template loader
+async function populateBackgroundTemplatesWithFallback() {
+    const container = document.getElementById('backgroundTemplates');
+    if (!container) return;
+    
+    container.innerHTML = '<div class="loading-text">Loading backgrounds...</div>';
+    
+    const backgrounds = await fetchBackgroundTemplatesWithFallback();
+    
+    if (backgrounds.length === 0) {
+        container.innerHTML = `
+            <p style="color: #ccc; text-align: center;">
+                Unable to load backgrounds<br>
+                <small>Network may be blocking GitHub API</small>
+            </p>
+        `;
+        return;
+    }
+    
+    let html = '<div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 15px; width: 100%;">';
+    
+    backgrounds.forEach(bg => {
+        // Store all URLs in data attribute for fallback
+        const urlsJson = JSON.stringify(bg.urls).replace(/"/g, '&quot;');
+        html += `
+            <div class="bg-template-item" 
+                 onclick="applyBackgroundWithFallback(${urlsJson}, '${bg.fullName}')" 
+                 title="${bg.name}">
+                <img src="${bg.url}" 
+                     alt="${bg.name}" 
+                     style="width: 100%; height: 100%; object-fit: cover; border-radius: 8px;"
+                     onerror="this.src='${bg.urls[1] || bg.url}'">
+                <div class="bg-template-label">${bg.name}</div>
+            </div>
+        `;
+    });
+    
+    html += '</div>';
+    container.innerHTML = html;
+}
+
+function applyBackgroundWithFallback(urls, fileName) {
+    // Try each URL until one works
+    let currentIndex = 0;
+    
+    function tryNextURL() {
+        if (currentIndex >= urls.length) {
+            showSaveNotification('Failed to load background - network restricted');
+            return;
+        }
+        
+        const img = new Image();
+        img.onload = function() {
+            document.body.style.backgroundImage = `url('${urls[currentIndex]}')`;
             document.body.style.backgroundSize = 'cover';
-            document.body.style.backgroundPosition = 'center';
             document.body.style.backgroundAttachment = 'fixed';
-            localStorage.setItem('customBackground', e.target.result);
+            localStorage.setItem('customBackground', urls[currentIndex]);
+            localStorage.setItem('customBackgroundName', fileName);
+            showSaveNotification(`Background applied: ${fileName}`);
         };
-        reader.readAsDataURL(file);
+        img.onerror = function() {
+            currentIndex++;
+            tryNextURL();
+        };
+        img.src = urls[currentIndex];
     }
-}
-
-function removeBackground() {
-    document.body.style.backgroundImage = '';
-    localStorage.removeItem('customBackground');
-}
-
-function applySnowSettings() {
-    const count = document.getElementById('snowCount').value;
-    const size = document.getElementById('snowSize').value;
-    const speed = document.getElementById('snowSpeed').value;
-    const color = document.getElementById('snowColor').value;
     
-    document.documentElement.style.setProperty('--snowCount', count);
-    document.documentElement.style.setProperty('--snowSize', size);
-    document.documentElement.style.setProperty('--snowSpeed', speed);
-    document.documentElement.style.setProperty('--snowColor', color);
+    tryNextURL();
+}
+
+// ============================================
+// INITIALIZATION WITH CDN DETECTION
+// ============================================
+
+async function initializeWithCDNDetection() {
+    console.log('=== School-Safe Initialization ===');
     
-    createSnowEffect();
-}
-
-function manualSave() {
-    const notification = document.getElementById('saveNotification');
-    notification.classList.add('show');
-    setTimeout(() => notification.classList.remove('show'), 3000);
-}
-
-function closeAllPanels() {
-    const settingsPanel = document.getElementById('settingsPanel');
-    const notifPanel = document.getElementById('notificationsPanel');
-    const overlay = document.getElementById('notificationsOverlay');
+    // Test and find working CDNs
+    await findWorkingCDN();
+    await findWorkingCoverCDN();
     
-    settingsPanel.classList.remove('open');
-    notifPanel.classList.remove('open');
-    overlay.classList.remove('active');
-}
-
-// Load custom background on page load
-const savedBg = localStorage.getItem('customBackground');
-if (savedBg) {
-    document.body.style.backgroundImage = `url(${savedBg})`;
-    document.body.style.backgroundSize = 'cover';
-    document.body.style.backgroundPosition = 'center';
-    document.body.style.backgroundAttachment = 'fixed';
-}
-
-// Update snow control displays
-window.addEventListener('DOMContentLoaded', function() {
-    const snowCountEl = document.getElementById('snowCount');
-    const snowSizeEl = document.getElementById('snowSize');
-    const snowSpeedEl = document.getElementById('snowSpeed');
-    
-    if (snowCountEl) {
-        snowCountEl.addEventListener('input', function() {
-            document.getElementById('snowCountValue').textContent = this.value;
+    // Update game covers to use working CDN
+    if (CDN_CONFIG.workingCoverCDN) {
+        GAMES_JSON.forEach(game => {
+            if (game.coverFile) {
+                game.cover = getCoverWithFallback(game.coverFile);
+            }
         });
     }
     
-    if (snowSizeEl) {
-        snowSizeEl.addEventListener('input', function() {
-            document.getElementById('snowSizeValue').textContent = this.value;
-        });
-    }
-    
-    if (snowSpeedEl) {
-        snowSpeedEl.addEventListener('input', function() {
-            document.getElementById('snowSpeedValue').textContent = this.value;
-        });
-    }
-});
+    console.log('CDN Detection complete:');
+    console.log('  Content CDN:', CDN_CONFIG.workingCDN?.name || 'Using fallbacks');
+    console.log('  Cover CDN:', CDN_CONFIG.workingCoverCDN?.name || 'Using fallbacks');
+}
 
-// Make functions globally accessible for onclick handlers
-window.loadGame = loadGame;
-window.closeGame = closeGame;
-window.toggleFullscreen = toggleFullscreen;
-window.reloadGame = reloadGame;
-window.scrollToLetter = scrollToLetter;
-window.toggleNotifications = toggleNotifications;
-window.toggleNotificationExpand = toggleNotificationExpand;
-window.markAllAsRead = markAllAsRead;
-window.loadGames = loadGames;
-window.toggleSettings = toggleSettings;
-window.applyCustomTheme = applyCustomTheme;
-window.resetTheme = resetTheme;
-window.uploadBackground = uploadBackground;
-window.removeBackground = removeBackground;
-window.applySnowSettings = applySnowSettings;
-window.saveTeacherLink = saveTeacherLink;
-window.saveTabCustomization = saveTabCustomization;
-window.resetTabCustomization = resetTabCustomization;
-window.manualSave = manualSave;
-window.closeAllPanels = closeAllPanels;
-window.closeAllPanels = closeAllPanels;
+// ============================================
+// EXPORT / GLOBAL ACCESS
+// ============================================
 
-// Debug: Test if loadGame is accessible
-console.log('window.loadGame exists:', typeof window.loadGame);
-console.log('Checking if loadGame is defined:', typeof loadGame);
+// Make functions globally accessible
+window.loadGameWithFallback = loadGameWithFallback;
+window.loadImageWithFallback = loadImageWithFallback;
+window.applyBackgroundWithFallback = applyBackgroundWithFallback;
+window.populateBackgroundTemplatesWithFallback = populateBackgroundTemplatesWithFallback;
+window.initializeWithCDNDetection = initializeWithCDNDetection;
+window.CDN_CONFIG = CDN_CONFIG;
+
+// Override the original loadGame if it exists
+if (typeof window.loadGame === 'undefined') {
+    window.loadGame = loadGameWithFallback;
+}
+
+// Run CDN detection on load
+document.addEventListener('DOMContentLoaded', initializeWithCDNDetection);
+
+console.log('✓ School-Safe loader initialized');
+console.log('  Multiple CDN fallbacks enabled');
+console.log('  Image fallback system ready');
