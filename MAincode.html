@@ -4,7 +4,34 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Game Launcher</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    
+    <!-- Font Awesome: Multiple CDN fallbacks for school Wi-Fi compatibility -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" 
+          onerror="this.onerror=null; this.href='https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.5.0/css/all.min.css';">
+    
+    <!-- Fallback: Inline critical Font Awesome icons if CDN fails -->
+    <style id="fa-fallback-icons">
+        /* Inline Font Awesome fallback - critical icons only */
+        .fa-fallback-mode .fa-gamepad::before { content: "🎮"; font-family: inherit; }
+        .fa-fallback-mode .fa-gear::before, .fa-fallback-mode .fa-cog::before { content: "⚙️"; font-family: inherit; }
+        .fa-fallback-mode .fa-bell::before { content: "🔔"; font-family: inherit; }
+        .fa-fallback-mode .fa-search::before { content: "🔍"; font-family: inherit; }
+        .fa-fallback-mode .fa-times::before, .fa-fallback-mode .fa-xmark::before { content: "✕"; font-family: inherit; }
+        .fa-fallback-mode .fa-expand::before { content: "⛶"; font-family: inherit; }
+        .fa-fallback-mode .fa-compress::before { content: "⛶"; font-family: inherit; }
+        .fa-fallback-mode .fa-refresh::before, .fa-fallback-mode .fa-rotate-right::before { content: "↻"; font-family: inherit; }
+        .fa-fallback-mode .fa-lock::before { content: "🔒"; font-family: inherit; }
+        .fa-fallback-mode .fa-external-link::before { content: "↗"; font-family: inherit; }
+        .fa-fallback-mode .fa-snowflake::before { content: "❄"; font-family: inherit; }
+        .fa-fallback-mode .fa-palette::before { content: "🎨"; font-family: inherit; }
+        .fa-fallback-mode .fa-image::before { content: "🖼️"; font-family: inherit; }
+        .fa-fallback-mode .fa-save::before { content: "💾"; font-family: inherit; }
+        .fa-fallback-mode .fa-trash::before { content: "🗑️"; font-family: inherit; }
+        .fa-fallback-mode .fa-check::before { content: "✓"; font-family: inherit; }
+        .fa-fallback-mode .fa-arrow-left::before { content: "←"; font-family: inherit; }
+        .fa-fallback-mode [class*="fa-"]::before { font-style: normal; }
+    </style>
+    
     <style>
         * {
             margin: 0;
@@ -500,2072 +527,337 @@
             border-radius: 5px;
             font-size: 10px;
             font-weight: bold;
-            z-index: 1;
         }
 
-        .section-title {
-            font-size: 28px;
-            color: var(--accent);
-            text-shadow: 0 0 15px var(--glowColor);
-            border-bottom: 3px solid var(--accent);
-            padding-bottom: 10px;
-            margin-bottom: 20px;
-            margin-top: 30px;
-        }
-
-        .game-title {
-            font-size: 18px;
-            font-weight: bold;
-            margin-bottom: 8px;
-            color: var(--text);
-        }
-
-        .game-description {
-            font-size: 14px;
-            color: var(--muted);
-            line-height: 1.4;
-        }
-
-        .game-iframe-container {
+        /* Resource loading status indicator */
+        .resource-status {
             position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: transparent;
-            z-index: 1000;
-            pointer-events: none;
-        }
-
-        .game-iframe {
-            width: 100%;
-            height: calc(100% - 60px);
-            border: none;
-            margin-top: 60px;
-        }
-
-        .iframe-controls {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 60px;
-            background: var(--header);
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 0 20px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
-            z-index: 1001;
-        }
-
-        .iframe-title {
-            font-size: 20px;
-            font-weight: bold;
+            bottom: 10px;
+            right: 10px;
+            background: rgba(0,0,0,0.8);
             color: var(--text);
-        }
-
-        .iframe-buttons {
-            display: flex;
-            gap: 15px;
-        }
-
-        .iframe-btn {
-            padding: 10px 20px;
-            background: var(--accent);
-            border: 2px solid var(--glowColor);
+            padding: 8px 12px;
             border-radius: 8px;
-            color: var(--text);
-            cursor: pointer;
-            font-weight: bold;
-            transition: all 0.3s;
-            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.5);
-        }
-
-        .iframe-btn:hover {
-            background: var(--accentDark);
-            box-shadow: 0 5px 20px var(--glowColor);
-            transform: translateY(-2px);
-        }
-
-        .settings-panel {
-            position: fixed;
-            top: 80px;
-            right: -400px;
-            width: 380px;
-            height: calc(100vh - 80px);
-            background: linear-gradient(180deg, var(--header), var(--bg));
-            border-left: 3px solid var(--accent);
-            padding: 0;
-            transition: right 0.4s;
-            z-index: 999;
-            overflow-y: auto;
-            box-shadow: -5px 0 20px rgba(0, 0, 0, 0.7);
-            display: flex;
-            flex-direction: column;
-        }
-
-        .settings-panel.open {
-            right: 0;
-        }
-
-        .settings-header {
-            padding: 25px 30px;
-            border-bottom: 2px solid var(--accent);
-            background: var(--header);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-shrink: 0;
-        }
-
-        .settings-header h2 {
-            color: var(--accent);
-            font-size: 24px;
-            text-shadow: 0 0 15px var(--glowColor);
-            margin: 0;
-        }
-
-        .settings-content {
-            padding: 30px;
-            overflow-y: auto;
-            flex-grow: 1;
-        }
-
-        .setting-group {
-            margin-bottom: 25px;
-            padding: 20px;
-            background: var(--cardBg);
-            border: 2px solid var(--accent);
-            border-radius: var(--cardRadius);
-            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.5);
-        }
-
-        .setting-label {
-            display: block;
-            margin-bottom: 10px;
-            font-weight: bold;
-            color: var(--text);
-        }
-
-        .setting-input {
-            width: 100%;
-            padding: 12px;
-            border: 2px solid var(--accent);
-            border-radius: 8px;
-            background: var(--bg);
-            color: var(--text);
-            font-size: 14px;
-            transition: all 0.3s;
-        }
-
-        .setting-input:focus {
-            outline: none;
-            box-shadow: 0 0 15px var(--glowColor);
-            border-color: var(--glowColor);
-        }
-
-        .setting-btn {
-            width: 100%;
-            padding: 12px;
-            background: var(--accent);
-            border: 2px solid var(--glowColor);
-            border-radius: 8px;
-            color: var(--text);
-            cursor: pointer;
-            font-weight: bold;
-            font-size: 16px;
-            transition: all 0.3s;
-            margin-top: 10px;
-            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.5);
-        }
-
-        .setting-btn:hover {
-            background: var(--accentDark);
-            box-shadow: 0 5px 20px var(--glowColor);
-            transform: translateY(-2px);
-        }
-
-        .color-picker-group {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 15px;
-        }
-
-        .color-picker-item {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-        }
-
-        .color-picker-item input[type="color"] {
-            width: 100%;
-            height: 40px;
-            border: 2px solid var(--accent);
-            border-radius: 8px;
-            cursor: pointer;
-            background: var(--bg);
-        }
-
-        .snow-controls {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 10px;
-        }
-
-        .snow-control-item label {
-            font-size: 13px;
-            margin-bottom: 5px;
-            display: block;
-        }
-
-        .snow-control-item input[type="range"] {
-            width: 100%;
-        }
-
-        .theme-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 15px;
-        }
-
-        .theme-card {
-            padding: 15px;
-            background: var(--cardBg);
-            border: 2px solid var(--accent);
-            border-radius: 10px;
-            cursor: pointer;
-            transition: all 0.3s;
-            text-align: center;
-            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.5);
-        }
-
-        .theme-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 5px 20px var(--glowColor);
-        }
-
-        .theme-card.active {
-            border-color: #ffff00;
-            box-shadow: 0 0 20px rgba(255, 255, 0, 0.5);
-        }
-
-        .theme-name {
-            font-weight: bold;
-            margin-bottom: 8px;
-        }
-
-        .theme-preview {
-            display: flex;
-            gap: 5px;
-            justify-content: center;
-        }
-
-        .theme-color {
-            width: 25px;
-            height: 25px;
-            border-radius: 5px;
-            border: 1px solid rgba(255, 255, 255, 0.3);
-        }
-
-        .teacher-link-panel {
-            padding: 20px;
-            background: var(--cardBg);
-            border: 2px solid #ffa500;
-            border-radius: var(--cardRadius);
-            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.5);
-        }
-
-        .teacher-link-input {
-            width: 100%;
-            padding: 12px;
-            margin: 10px 0;
-            border: 2px solid #ffa500;
-            border-radius: 8px;
-            background: var(--bg);
-            color: var(--text);
-        }
-
-        .teacher-link-active {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 15px;
-            background: rgba(255, 165, 0, 0.2);
-            border: 2px solid #ffa500;
-            border-radius: 8px;
-            margin-top: 15px;
-        }
-
-        .tab-customization-panel {
-            padding: 20px;
-            background: var(--cardBg);
-            border: 2px solid var(--accent);
-            border-radius: var(--cardRadius);
-            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.5);
-        }
-
-        .notifications-panel {
-            position: fixed;
-            top: 80px;
-            right: -450px;
-            width: 420px;
-            height: calc(100vh - 80px);
-            background: linear-gradient(180deg, var(--header), var(--bg));
-            border-left: 3px solid var(--accent);
-            padding: 0;
-            transition: right 0.4s;
-            z-index: 998;
-            box-shadow: -5px 0 20px rgba(0, 0, 0, 0.7);
-            display: flex;
-            flex-direction: column;
-        }
-
-        .notifications-panel.open {
-            right: 0;
-        }
-
-        .notifications-header {
-            padding: 25px 30px;
-            border-bottom: 2px solid var(--accent);
-            background: var(--header);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-shrink: 0;
-        }
-
-        .notifications-header h2 {
-            color: var(--accent);
-            font-size: 24px;
-            text-shadow: 0 0 15px var(--glowColor);
-            margin: 0;
-        }
-
-        .notifications-actions {
-            display: flex;
-            gap: 10px;
-        }
-
-        .notif-btn {
-            padding: 8px 16px;
-            background: var(--accent);
-            border: 2px solid var(--glowColor);
-            border-radius: 8px;
-            color: var(--text);
-            cursor: pointer;
-            font-weight: bold;
-            font-size: 14px;
-            transition: all 0.3s;
-        }
-
-        .notif-btn:hover {
-            background: var(--accentDark);
-            box-shadow: 0 3px 15px var(--glowColor);
-        }
-
-        .notif-btn.close-btn {
-            background: transparent;
-            border-color: var(--accent);
-        }
-
-        .notifications-content {
-            padding: 20px 30px;
-            overflow-y: auto;
-            flex-grow: 1;
-        }
-
-        .notification-item {
-            background: var(--cardBg);
-            border: 2px solid var(--accent);
-            border-radius: var(--cardRadius);
-            padding: 20px;
-            margin-bottom: 15px;
-            transition: all 0.3s;
-            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.5);
-        }
-
-        .notification-item:hover {
-            transform: translateX(-5px);
-            box-shadow: 0 5px 20px var(--glowColor);
-        }
-
-        .notification-item.unread {
-            border-color: #ffff00;
-            box-shadow: 0 0 15px rgba(255, 255, 0, 0.3);
-        }
-
-        .notification-header-content {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            margin-bottom: 10px;
-        }
-
-        .notification-title {
-            font-size: 18px;
-            font-weight: bold;
-            color: var(--text);
-            margin: 0;
-        }
-
-        .notification-type {
-            display: flex;
-            align-items: center;
-            gap: 5px;
-            padding: 4px 12px;
-            border-radius: 12px;
             font-size: 12px;
-            font-weight: bold;
-            text-transform: uppercase;
-        }
-
-        .notification-type.update {
-            background: rgba(0, 255, 0, 0.2);
-            color: #00ff00;
-            border: 1px solid #00ff00;
-        }
-
-        .notification-type.announcement {
-            background: rgba(255, 165, 0, 0.2);
-            color: #ffa500;
-            border: 1px solid #ffa500;
-        }
-
-        .notification-type.warning {
-            background: rgba(255, 0, 0, 0.2);
-            color: #ff0000;
-            border: 1px solid #ff0000;
-        }
-
-        .notification-type-dot {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            background: currentColor;
-            animation: notifDotPulse 2s infinite;
-        }
-
-        @keyframes notifDotPulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.5; }
-        }
-
-        .notification-description {
-            color: var(--muted);
-            font-size: 14px;
-            line-height: 1.5;
-            margin-bottom: 10px;
-        }
-
-        .notification-expand {
-            color: var(--accent);
-            cursor: pointer;
-            font-size: 13px;
-            font-weight: bold;
-            display: flex;
-            align-items: center;
-            gap: 5px;
-            margin-top: 10px;
-            transition: all 0.3s;
-        }
-
-        .notification-expand:hover {
-            color: var(--glowColor);
-            text-shadow: 0 0 10px var(--glowColor);
-        }
-
-        .notification-expand-icon {
-            transition: transform 0.3s;
-        }
-
-        .notification-item.expanded .notification-expand-icon {
-            transform: rotate(90deg);
-        }
-
-        .notification-full-content {
-            max-height: 0;
-            overflow: hidden;
-            transition: max-height 0.3s;
-            color: var(--text);
-            font-size: 14px;
-            line-height: 1.6;
-            margin-top: 10px;
-            padding-top: 0;
-            border-top: 1px solid transparent;
-        }
-
-        .notification-item.expanded .notification-full-content {
-            max-height: 500px;
-            padding-top: 15px;
-            border-top-color: var(--accent);
-        }
-
-        .notification-date {
-            font-size: 12px;
-            color: var(--muted);
-            margin-top: 10px;
-            font-style: italic;
-        }
-
-        .notifications-empty {
-            text-align: center;
-            padding: 50px 20px;
-            color: var(--muted);
-        }
-
-        .notifications-empty h3 {
-            font-size: 24px;
-            margin-bottom: 10px;
-        }
-
-        .notifications-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.7);
+            z-index: 9999;
             display: none;
-            z-index: 997;
-            backdrop-filter: blur(5px);
-        }
-
-        .notifications-overlay.active {
-            display: block;
-        }
-
-        .save-notification {
-            position: fixed;
-            bottom: 30px;
-            right: 30px;
-            background: linear-gradient(145deg, #00ff00, #00cc00);
-            color: #000;
-            padding: 15px 25px;
-            border-radius: 10px;
-            font-weight: bold;
-            box-shadow: 0 5px 20px rgba(0, 255, 0, 0.5);
-            opacity: 0;
-            transform: translateY(20px);
-            transition: all 0.4s;
-            z-index: 2000;
-            pointer-events: none;
-        }
-
-        .save-notification.show {
-            opacity: 1;
-            transform: translateY(0);
-        }
-
-        .toggle-switch {
-            position: relative;
-            display: inline-block;
-            width: 60px;
-            height: 30px;
-            margin-right: 10px;
-            vertical-align: middle;
-        }
-
-        .toggle-switch input {
-            opacity: 0;
-            width: 0;
-            height: 0;
-        }
-
-        .toggle-slider {
-            position: absolute;
-            cursor: pointer;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background-color: #ccc;
-            transition: .4s;
-            border-radius: 34px;
-            border: 2px solid var(--accent);
-        }
-
-        .toggle-slider:before {
-            position: absolute;
-            content: "";
-            height: 22px;
-            width: 22px;
-            left: 4px;
-            bottom: 2px;
-            background-color: white;
-            transition: .4s;
-            border-radius: 50%;
-        }
-
-        input:checked + .toggle-slider {
-            background-color: var(--accent);
-        }
-
-        input:checked + .toggle-slider:before {
-            transform: translateX(26px);
-        }
-
-        .snow-toggle-container {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 15px;
-            padding: 10px;
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 8px;
-        }
-
-        @media (max-width: 768px) {
-            .sidebar {
-                flex-wrap: wrap;
-                padding: 10px;
-                gap: 10px;
-            }
-
-            .sidebar-item {
-                padding: 10px 15px;
-                font-size: 14px;
-            }
-
-            .main-wrapper {
-                margin-top: 120px;
-            }
-
-            .settings-panel, .notifications-panel {
-                width: 100%;
-                right: -100%;
-                top: 120px;
-                height: calc(100vh - 120px);
-            }
-
-            .games-grid, .game-grid {
-                grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
-                gap: 12px;
-            }
-
-            .header h1 {
-                font-size: 32px;
-            }
-
-            .controls {
-                flex-direction: column;
-                width: 100%;
-            }
-
-            .search-container, .select-box {
-                width: 100%;
-            }
-            
-            .search-container {
-                width: 100%;
-                max-width: 100%;
-            }
-        }
-
-        input[type="range"] {
-            -webkit-appearance: none;
-            width: 100%;
-            height: 6px;
-            border-radius: 5px;
-            background: var(--bg);
-            outline: none;
             border: 1px solid var(--accent);
         }
-
-        input[type="range"]::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            appearance: none;
-            width: 18px;
-            height: 18px;
-            border-radius: 50%;
-            background: var(--accent);
-            cursor: pointer;
-            box-shadow: 0 0 10px var(--glowColor);
+        
+        .resource-status.show {
+            display: block;
+            animation: fadeInOut 3s forwards;
+        }
+        
+        @keyframes fadeInOut {
+            0% { opacity: 0; }
+            10% { opacity: 1; }
+            80% { opacity: 1; }
+            100% { opacity: 0; }
         }
 
-        input[type="range"]::-moz-range-thumb {
-            width: 18px;
-            height: 18px;
-            border-radius: 50%;
-            background: var(--accent);
-            cursor: pointer;
-            box-shadow: 0 0 10px var(--glowColor);
-        }
-        .bg-template-item {
-            position: relative;
-            cursor: pointer;
-            border: 2px solid var(--accent);
-            border-radius: 8px;
-            overflow: hidden;
-            transition: all 0.3s ease;
-            aspect-ratio: 1;
+        /* Placeholder for failed images */
+        .game-cover.load-failed {
             display: flex;
-            align-items: flex-end;
+            align-items: center;
             justify-content: center;
-        }
-
-        .bg-template-item:hover {
-            transform: scale(1.05);
-            box-shadow: 0 0 15px var(--glowColor);
-            border-color: #ffff00;
-        }
-
-        .bg-template-label {
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            background: rgba(0, 0, 0, 0.7);
-            color: var(--text);
-            padding: 8px;
-            font-size: 12px;
-            text-align: center;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-
-        #backgroundTemplates {
-            width: 100%;
-            padding: 15px;
+            background: linear-gradient(135deg, var(--accentDark), var(--accent));
+            font-size: 32px;
         }
     </style>
 </head>
 <body>
+    <!-- Resource status indicator -->
+    <div id="resourceStatus" class="resource-status"></div>
 
-<canvas id="snowCanvas"></canvas>
-
-<div id="initial-loader">
-    <div class="initial-spinner"></div>
-    <div class="loading-text" id="loadingText">Initializing Game Launcher...</div>
-    <div class="game-count" id="gameCount">Loading games...</div>
-</div>
-
-<nav class="sidebar">
-    <div class="sidebar-item active" id="gamesItem" onclick="loadGames()">
-        🎮 Games
-        <span class="tooltip">Browse all games</span>
-    </div>
-    <div class="sidebar-item" id="notificationsItem" onclick="toggleNotifications()">
-        🔔 Updates
-        <span class="notification-badge" id="notifBadge" style="display: none;">0</span>
-        <span class="tooltip">View updates and notifications</span>
-    </div>
-    <div class="sidebar-item" id="settingsItem" onclick="toggleSettings()">
-        ⚙️ Settings
-        <span class="tooltip">Customize your launcher</span>
-    </div>
-</nav>
-
-<div class="main-wrapper">
-    <div class="main-content" id="mainContent">
-        <div class="header">
-            <h1>🎮 Game Launcher</h1>
-        </div>
-
-        <div class="controls">
-            <div class="search-container">
-                <input type="text" class="search-box" id="searchBox" placeholder="🔍 Search games...">
-                <button class="clear-search-btn" id="clearSearchBtn">✖</button>
-            </div>
-            <select class="select-box" id="sortSelect">
-                <option value="alphabetical">A-Z</option>
-                <option value="recent">Recently Added</option>
-                <option value="popular">Most Popular</option>
-            </select>
-            <select class="select-box" id="categorySelect">
-                <option value="all">All Categories</option>
-            </select>
-        </div>
-
-        <div class="alphabet-nav" id="alphabetNav"></div>
-
-        <div id="noResults" style="display: none; text-align: center; padding: 50px; color: var(--muted);">
-            <h2>🔍 No games found</h2>
-            <p>Try a different search term</p>
-        </div>
-
-        <div id="gameSections"></div>
-    </div>
-</div>
-
-<div class="game-iframe-container" id="gameContainer">
-    <div id="game-loader" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 2000; flex-direction: column; justify-content: center; align-items: center; pointer-events: auto;">
+    <!-- Initial Loading Screen -->
+    <div id="initial-loader">
         <div class="initial-spinner"></div>
-        <div class="loading-text">Loading game...</div>
-        <div id="verseText" style="color: var(--muted); margin-top: 20px; font-style: italic;"></div>
-        <div id="verseReference" style="color: var(--accent); margin-top: 10px;"></div>
+        <div class="loading-text">Loading Game Launcher...</div>
+        <div class="game-count" id="gameCount">Connecting...</div>
     </div>
-    <div id="game-container" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 2000; background: #000000; pointer-events: auto;">
-        <div class="iframe-controls">
-            <div class="iframe-title" id="currentGameTitle">Game Title</div>
-            <div class="iframe-buttons">
-                <button class="iframe-btn" id="fullscreenBtn" onclick="window.toggleFullscreen()">⛶ Fullscreen</button>
-                <button class="iframe-btn" onclick="window.reloadGame()">🔄 Reload</button>
-                <button class="iframe-btn" onclick="var f=document.getElementById('game-frame'); f.onload=null; f.onerror=null; f.src=''; document.getElementById('game-container').style.display='none'; console.log('Closed!');">✖ Close</button>
-            </div>
-        </div>
-        <iframe class="game-iframe" id="game-frame"></iframe>
+
+    <!-- Main Content (hidden until loaded) -->
+    <div id="mainContent" class="main-content">
+        <!-- Your existing content here -->
     </div>
-</div>
 
-<div class="settings-panel" id="settingsPanel">
-    <div class="settings-header">
-        <h2>⚙️ Settings</h2>
-        <button class="notif-btn close-btn" onclick="toggleSettings()">✖</button>
-    </div>
-    <div class="settings-content">
-        <div class="setting-group">
-            <label class="setting-label">Theme Presets</label>
-            <div class="theme-grid" id="themeGrid"></div>
-        </div>
-
-        <div class="setting-group">
-            <label class="setting-label">Custom Colors</label>
-            <div class="color-picker-group">
-                <div class="color-picker-item">
-                    <label>Background</label>
-                    <input type="color" id="bgColor" value="#1a0000" onchange="applyColorChange()">
-                </div>
-                <div class="color-picker-item">
-                    <label>Accent</label>
-                    <input type="color" id="accentColor" value="#ff0000" onchange="applyColorChange()">
-                </div>
-                <div class="color-picker-item">
-                    <label>Text</label>
-                    <input type="color" id="textColor" value="#ffffff" onchange="applyColorChange()">
-                </div>
-                <div class="color-picker-item">
-                    <label>Glow</label>
-                    <input type="color" id="glowColor" value="#ff0000" onchange="applyColorChange()">
-                </div>
-            </div>
-            <button class="setting-btn" onclick="saveCustomTheme()">Save Custom Theme</button>
-            <button class="setting-btn" onclick="resetTheme()">Reset to Default</button>
-        </div>
-
-        <div class="setting-group">
-            <label class="setting-label">Custom Background</label>
-            <input type="file" id="backgroundUpload" accept="image/*" class="setting-input" style="padding: 8px;">
-            <button class="setting-btn" onclick="uploadBackground()">Upload Background</button>
-            <button class="setting-btn" onclick="removeBackground()">Remove Background</button>
-        </div>
-
-        <div class="setting-group">
-            <label class="setting-label">🎨 Background Templates</label>
-            <p style="font-size: 13px; color: var(--muted); margin-bottom: 10px;">
-                Select from pre-made backgrounds from GitHub
-            </p>
-            <div id="backgroundTemplates" style="display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100px;">
-                <div class="loading-text">Loading backgrounds...</div>
-            </div>
-        </div>
-
-        <div class="setting-group">
-            <label class="setting-label">🖼️ Game Cover Images</label>
-            <p style="font-size: 13px; color: var(--muted); margin-bottom: 10px;">
-                Upload custom images for game covers
-            </p>
-            
-            <div style="margin-bottom: 15px;">
-                <label style="display: block; margin-bottom: 8px; font-weight: bold;">Upload Image</label>
-                <input type="file" id="imageUpload" accept="image/*" class="setting-input" style="padding: 8px;">
-                <button class="setting-btn" onclick="uploadImage()" style="margin-top: 10px;">Upload Image</button>
-            </div>
-            
-            <div style="margin-bottom: 15px;">
-                <label style="display: block; margin-bottom: 8px; font-weight: bold;">Or Use Image URL</label>
-                <input type="text" id="imageUrlInput" class="setting-input" placeholder="https://example.com/image.jpg">
-                <button class="setting-btn" onclick="useImageUrl()" style="margin-top: 10px;">Use Image URL</button>
-            </div>
-            
-            <button class="setting-btn" onclick="clearAllImages()" style="background: #ff4444; margin-top: 15px;">
-                🗑️ Clear All Images
-            </button>
-        </div>
-
-        <div class="setting-group">
-            <label class="setting-label">❄️ Snow Effect</label>
-            <div class="snow-toggle-container">
-                <span>Enable Snow Effect</span>
-                <label class="toggle-switch">
-                    <input type="checkbox" id="snowToggle" checked onchange="toggleSnow()">
-                    <span class="toggle-slider"></span>
-                </label>
-            </div>
-            <div class="snow-controls">
-                <div class="snow-control-item">
-                    <label>Count: <span id="snowCountValue">150</span></label>
-                    <input type="range" id="snowCount" min="0" max="300" value="150" oninput="updateSnowSettings()">
-                </div>
-                <div class="snow-control-item">
-                    <label>Size: <span id="snowSizeValue">3</span></label>
-                    <input type="range" id="snowSize" min="1" max="10" value="3" step="0.1" oninput="updateSnowSettings()">
-                </div>
-                <div class="snow-control-item">
-                    <label>Speed: <span id="snowSpeedValue">1.2</span></label>
-                    <input type="range" id="snowSpeed" min="0.1" max="3" step="0.1" value="1.2" oninput="updateSnowSettings()">
-                </div>
-                <div class="snow-control-item">
-                    <label>Color</label>
-                    <input type="color" id="snowColor" value="#ffffff" onchange="updateSnowSettings()">
-                </div>
-            </div>
-            <button class="setting-btn" onclick="saveSnowSettings()">Save Snow Settings</button>
-            <button class="setting-btn" onclick="snowEffect ? snowEffect.reset() : ''" style="margin-top: 10px; background: #555;">Reset Snow</button>
-        </div>
-
-        <div class="setting-group teacher-link-panel">
-            <label class="setting-label">🔗 Teacher Redirect Link</label>
-            <p style="font-size: 13px; color: var(--muted); margin-bottom: 10px;">
-                Set a link that opens when teacher/admin hotkey is pressed (Escape key)
-            </p>
-            <input type="text" class="teacher-link-input" id="teacherLinkInput" placeholder="https://classroom.google.com">
-            <button class="setting-btn" onclick="saveTeacherLink()">Save Link</button>
-            <div id="teacherLinkStatus"></div>
-        </div>
-
-        <div class="setting-group tab-customization-panel">
-            <label class="setting-label">📑 Tab Customization</label>
-            <input type="text" class="setting-input" id="tabTitleInput" placeholder="Custom Tab Title" style="margin-bottom: 10px;">
-            <input type="text" class="setting-input" id="tabIconInput" placeholder="Tab Icon URL (favicon)">
-            <button class="setting-btn" onclick="saveTabCustomization()">Apply Tab Settings</button>
-            <button class="setting-btn" onclick="resetTabCustomization()">Reset Tab</button>
-        </div>
-    </div>
-</div>
-
-<div id="notificationsPanel" class="notifications-panel">
-    <div class="notifications-header">
-        <h2>🔔 Updates</h2>
-        <div class="notifications-actions">
-            <button class="notif-btn" onclick="markAllAsRead()">Mark all read</button>
-            <button class="notif-btn close-btn" onclick="toggleNotifications()">✖</button>
-        </div>
-    </div>
-    <div class="notifications-content" id="notificationsContent">
-    </div>
-</div>
-<div id="notificationsOverlay" class="notifications-overlay" onclick="closeAllPanels()"></div>
-
-<script>
-// Search functionality
-document.addEventListener('DOMContentLoaded', function() {
-    const searchBox = document.getElementById('searchBox');
-    const clearSearchBtn = document.getElementById('clearSearchBtn');
-    const noResults = document.getElementById('noResults');
-    const alphabetNav = document.getElementById('alphabetNav');
-    
-    if (!searchBox) return;
-    
-    // Function to perform search
-    function performSearch() {
-        const searchTerm = searchBox.value.toLowerCase().trim();
-        const gameCards = document.querySelectorAll('.game-card');
-        let foundResults = false;
+    <!-- ============================================ -->
+    <!-- SCHOOL WI-FI COMPATIBLE RESOURCE LOADER -->
+    <!-- ============================================ -->
+    <script>
+    /**
+     * SchoolSafeLoader - Handles resource loading with multiple fallbacks
+     * Designed to work around common school network restrictions
+     */
+    const SchoolSafeLoader = {
+        // CDN priority order (some schools block specific CDNs)
+        cdnList: [
+            'https://cdn.jsdelivr.net/gh/',           // Primary - jsDelivr (most reliable)
+            'https://rawcdn.githack.com/',            // GitHack CDN
+            'https://raw.githubusercontent.com/',     // Raw GitHub (often blocked)
+            'https://cdn.statically.io/gh/'          // Statically CDN
+        ],
         
-        if (searchTerm === '') {
-            // If search is empty, show all games
-            gameCards.forEach(card => {
-                card.style.display = 'flex';
-                const parentSection = card.closest('.game-section, .games-grid');
-                if (parentSection) {
-                    parentSection.style.display = 'block';
-                }
-            });
-            
-            // Show all alphabet letters
-            const alphabetLetters = document.querySelectorAll('.alphabet-letter');
-            alphabetLetters.forEach(letter => {
-                letter.style.display = 'flex';
-            });
-            
-            noResults.style.display = 'none';
-            clearSearchBtn.style.display = 'none';
-            return;
-        }
+        // Track which CDNs work
+        workingCDN: null,
         
-        // Show clear button
-        clearSearchBtn.style.display = 'block';
-        
-        // Hide all alphabet letters during search
-        const alphabetLetters = document.querySelectorAll('.alphabet-letter');
-        alphabetLetters.forEach(letter => {
-            letter.style.display = 'none';
-        });
-        
-        // Search through all game cards
-        gameCards.forEach(card => {
-            const gameTitleElement = card.querySelector('.game-info h3');
-            const gameDescriptionElement = card.querySelector('.game-info p');
-            const gameAuthorElement = card.querySelector('.game-author');
-            
-            if (!gameTitleElement) return;
-            
-            const gameTitle = gameTitleElement.textContent.toLowerCase();
-            const gameDescription = gameDescriptionElement ? gameDescriptionElement.textContent.toLowerCase() : '';
-            const gameAuthor = gameAuthorElement ? gameAuthorElement.textContent.toLowerCase() : '';
-            
-            // Check if game matches search term
-            if (gameTitle.includes(searchTerm) || 
-                gameDescription.includes(searchTerm) || 
-                gameAuthor.includes(searchTerm)) {
-                card.style.display = 'flex';
-                const parentSection = card.closest('.game-section, .games-grid');
-                if (parentSection) {
-                    parentSection.style.display = 'block';
-                }
-                foundResults = true;
-            } else {
-                card.style.display = 'none';
-                // Hide parent section if all cards are hidden
-                const parentSection = card.closest('.game-section, .games-grid');
-                if (parentSection) {
-                    const visibleCards = parentSection.querySelectorAll('.game-card[style*="display: flex"], .game-card:not([style*="display: none"])');
-                    if (visibleCards.length === 0) {
-                        parentSection.style.display = 'none';
-                    }
-                }
+        // Show status message
+        showStatus(message, isError = false) {
+            const status = document.getElementById('resourceStatus');
+            if (status) {
+                status.textContent = message;
+                status.style.borderColor = isError ? '#ff4444' : 'var(--accent)';
+                status.classList.add('show');
+                setTimeout(() => status.classList.remove('show'), 3000);
             }
-        });
-        
-        // Show/hide "no results" message
-        if (foundResults) {
-            noResults.style.display = 'none';
-        } else {
-            noResults.style.display = 'block';
-            // Hide all sections if no results
-            document.querySelectorAll('.game-section, .games-grid').forEach(section => {
-                section.style.display = 'none';
-            });
-        }
-    }
-    
-    // Add input event listener for real-time search
-    searchBox.addEventListener('input', performSearch);
-    
-    // Add keydown event for Enter key
-    searchBox.addEventListener('keydown', function(e) {
-        if (e.key === 'Enter') {
-            performSearch();
-            e.preventDefault();
-        }
-    });
-    
-    // Clear search functionality
-    clearSearchBtn.addEventListener('click', function() {
-        searchBox.value = '';
-        performSearch();
-        searchBox.focus();
-    });
-    
-    // Also clear search when clicking on sidebar items
-    const sidebarItems = document.querySelectorAll('.sidebar-item');
-    sidebarItems.forEach(item => {
-        item.addEventListener('click', function() {
-            if (searchBox.value.trim() !== '') {
-                searchBox.value = '';
-                performSearch();
-                clearSearchBtn.style.display = 'none';
-            }
-        });
-    });
-    
-    // Initial check for clear button visibility
-    if (searchBox.value.trim() !== '') {
-        clearSearchBtn.style.display = 'block';
-    }
-});
-</script>
+            console.log(`[SchoolSafeLoader] ${message}`);
+        },
 
-<script>
-// Snow Effect
-class SnowEffect {
-    constructor() {
-        this.canvas = document.getElementById('snowCanvas');
-        this.ctx = this.canvas.getContext('2d');
-        this.snowflakes = [];
-        this.isAnimating = false;
-        this.animationId = null;
-        this.enabled = true;
-        
-        // Get initial values from CSS variables
-        this.snowCount = parseInt(getComputedStyle(document.documentElement)
-            .getPropertyValue('--snowCount').trim()) || 150;
-        this.snowSize = parseFloat(getComputedStyle(document.documentElement)
-            .getPropertyValue('--snowSize').trim()) || 3;
-        this.snowSpeed = parseFloat(getComputedStyle(document.documentElement)
-            .getPropertyValue('--snowSpeed').trim()) || 1.2;
-        this.snowColor = getComputedStyle(document.documentElement)
-            .getPropertyValue('--snowColor').trim() || '#ffffff';
-        
-        this.init();
-    }
-    
-    init() {
-        this.resizeCanvas();
-        window.addEventListener('resize', () => this.resizeCanvas());
-        this.createSnowflakes();
-        
-        // Check if snow is enabled from localStorage
-        const savedEnabled = localStorage.getItem('snowEnabled');
-        if (savedEnabled !== null) {
-            this.enabled = savedEnabled === 'true';
-        }
-        
-        if (this.enabled) {
-            this.start();
-        } else {
-            this.canvas.classList.add('hidden');
-        }
-    }
-    
-    resizeCanvas() {
-        this.canvas.width = window.innerWidth;
-        this.canvas.height = window.innerHeight;
-    }
-    
-    createSnowflakes() {
-        this.snowflakes = [];
-        for (let i = 0; i < this.snowCount; i++) {
-            this.snowflakes.push({
-                x: Math.random() * this.canvas.width,
-                y: Math.random() * this.canvas.height,
-                radius: Math.random() * this.snowSize + 1,
-                speed: Math.random() * this.snowSpeed + 0.5,
-                opacity: Math.random() * 0.8 + 0.2,
-                sway: Math.random() * 2 - 1
-            });
-        }
-    }
-    
-    updateSnowflakes() {
-        for (let flake of this.snowflakes) {
-            flake.y += flake.speed;
-            flake.x += flake.sway * 0.5;
-            
-            if (flake.y > this.canvas.height) {
-                flake.y = -flake.radius;
-                flake.x = Math.random() * this.canvas.width;
-            }
-            
-            if (flake.x > this.canvas.width) {
-                flake.x = -flake.radius;
-            } else if (flake.x < -flake.radius) {
-                flake.x = this.canvas.width;
-            }
-        }
-    }
-    
-    drawSnowflakes() {
-        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-        this.ctx.fillStyle = this.snowColor;
-        
-        for (let flake of this.snowflakes) {
-            this.ctx.globalAlpha = flake.opacity;
-            this.ctx.beginPath();
-            this.ctx.arc(flake.x, flake.y, flake.radius, 0, Math.PI * 2);
-            this.ctx.fill();
-        }
-        this.ctx.globalAlpha = 1;
-    }
-    
-    animate() {
-        if (!this.enabled) return;
-        
-        this.updateSnowflakes();
-        this.drawSnowflakes();
-        this.animationId = requestAnimationFrame(() => this.animate());
-    }
-    
-    start() {
-        if (!this.isAnimating && this.enabled) {
-            this.isAnimating = true;
-            this.canvas.classList.remove('hidden');
-            this.animate();
-        }
-    }
-    
-    stop() {
-        if (this.isAnimating) {
-            this.isAnimating = false;
-            cancelAnimationFrame(this.animationId);
-            this.canvas.classList.add('hidden');
-        }
-    }
-    
-    toggle() {
-        this.enabled = !this.enabled;
-        
-        if (this.enabled) {
-            this.start();
-        } else {
-            this.stop();
-        }
-        
-        // Update CSS variable
-        document.documentElement.style.setProperty('--snowEnabled', this.enabled ? '1' : '0');
-        
-        // Save to localStorage
-        localStorage.setItem('snowEnabled', this.enabled);
-        localStorage.setItem('snowSettings', JSON.stringify({
-            enabled: this.enabled,
-            count: this.snowCount,
-            size: this.snowSize,
-            speed: this.snowSpeed,
-            color: this.snowColor
-        }));
-        
-        // Update toggle UI
-        document.getElementById('snowToggle').checked = this.enabled;
-        
-        return this.enabled;
-    }
-    
-    updateSettings(count, size, speed, color, save = true) {
-        this.snowCount = parseInt(count) || 150;
-        this.snowSize = parseFloat(size) || 3;
-        this.snowSpeed = parseFloat(speed) || 1.2;
-        this.snowColor = color || '#ffffff';
-        
-        // Update CSS variables
-        document.documentElement.style.setProperty('--snowCount', this.snowCount);
-        document.documentElement.style.setProperty('--snowSize', this.snowSize);
-        document.documentElement.style.setProperty('--snowSpeed', this.snowSpeed);
-        document.documentElement.style.setProperty('--snowColor', this.snowColor);
-        
-        if (save) {
-            // Save to localStorage
-            localStorage.setItem('snowSettings', JSON.stringify({
-                enabled: this.enabled,
-                count: this.snowCount,
-                size: this.snowSize,
-                speed: this.snowSpeed,
-                color: this.snowColor
-            }));
-        }
-        
-        this.stop();
-        this.createSnowflakes();
-        if (this.enabled) {
-            this.start();
-        }
-        
-        // Update UI values
-        this.updateSliderValues();
-    }
-    
-    reset() {
-        const defaultSettings = {
-            count: 150,
-            size: 3,
-            speed: 1.2,
-            color: '#ffffff'
-        };
-        
-        this.updateSettings(
-            defaultSettings.count,
-            defaultSettings.size,
-            defaultSettings.speed,
-            defaultSettings.color
-        );
-        
-        // Update UI sliders
-        document.getElementById('snowCount').value = defaultSettings.count;
-        document.getElementById('snowSize').value = defaultSettings.size;
-        document.getElementById('snowSpeed').value = defaultSettings.speed;
-        document.getElementById('snowColor').value = defaultSettings.color;
-        
-        this.updateSliderValues();
-    }
-    
-    updateSliderValues() {
-        document.getElementById('snowCountValue').textContent = this.snowCount;
-        document.getElementById('snowSizeValue').textContent = this.snowSize;
-        document.getElementById('snowSpeedValue').textContent = this.snowSpeed;
-    }
-}
-
-// Initialize snow effect
-let snowEffect = null;
-
-// Theme Management
-class ThemeManager {
-    constructor() {
-        this.themes = {
-            default: {
-                name: 'Default',
-                bg: '#1a0000',
-                header: '#330000',
-                text: '#ffffff',
-                accent: '#ff0000',
-                accentDark: '#cc0000',
-                glowColor: '#ff0000',
-                cardBg: '#1a0000'
-            },
-            dark: {
-                name: 'Dark',
-                bg: '#0a0a0a',
-                header: '#1a1a1a',
-                text: '#ffffff',
-                accent: '#00a8ff',
-                accentDark: '#0077b6',
-                glowColor: '#00a8ff',
-                cardBg: '#1a1a1a'
-            },
-            purple: {
-                name: 'Purple',
-                bg: '#1a001a',
-                header: '#330033',
-                text: '#ffffff',
-                accent: '#9c27b0',
-                accentDark: '#6a1b9a',
-                glowColor: '#9c27b0',
-                cardBg: '#1a001a'
-            },
-            green: {
-                name: 'Green',
-                bg: '#001a00',
-                header: '#003300',
-                text: '#ffffff',
-                accent: '#4caf50',
-                accentDark: '#2e7d32',
-                glowColor: '#4caf50',
-                cardBg: '#001a00'
-            },
-            blue: {
-                name: 'Blue',
-                bg: '#001a33',
-                header: '#003366',
-                text: '#ffffff',
-                accent: '#2196f3',
-                accentDark: '#0d47a1',
-                glowColor: '#2196f3',
-                cardBg: '#001a33'
-            }
-        };
-        
-        this.currentTheme = 'default';
-        this.init();
-    }
-    
-    init() {
-        this.loadTheme();
-        this.createThemeGrid();
-        this.setupEventListeners();
-    }
-    
-    createThemeGrid() {
-        const themeGrid = document.getElementById('themeGrid');
-        if (!themeGrid) return;
-        
-        themeGrid.innerHTML = '';
-        
-        for (const [key, theme] of Object.entries(this.themes)) {
-            const themeCard = document.createElement('div');
-            themeCard.className = `theme-card ${key === this.currentTheme ? 'active' : ''}`;
-            themeCard.dataset.theme = key;
-            themeCard.onclick = () => this.applyTheme(key);
-            
-            themeCard.innerHTML = `
-                <div class="theme-name">${theme.name}</div>
-                <div class="theme-preview">
-                    <div class="theme-color" style="background: ${theme.bg}" title="Background"></div>
-                    <div class="theme-color" style="background: ${theme.accent}" title="Accent"></div>
-                    <div class="theme-color" style="background: ${theme.cardBg}" title="Card"></div>
-                </div>
-            `;
-            
-            themeGrid.appendChild(themeCard);
-        }
-    }
-    
-    applyTheme(themeName) {
-        if (!this.themes[themeName]) return;
-        
-        const theme = this.themes[themeName];
-        this.currentTheme = themeName;
-        
-        // Update CSS variables
-        document.documentElement.style.setProperty('--bg', theme.bg);
-        document.documentElement.style.setProperty('--header', theme.header);
-        document.documentElement.style.setProperty('--text', theme.text);
-        document.documentElement.style.setProperty('--accent', theme.accent);
-        document.documentElement.style.setProperty('--accentDark', theme.accentDark);
-        document.documentElement.style.setProperty('--glowColor', theme.glowColor);
-        document.documentElement.style.setProperty('--cardBg', theme.cardBg);
-        
-        // Update color pickers
-        document.getElementById('bgColor').value = theme.bg;
-        document.getElementById('accentColor').value = theme.accent;
-        document.getElementById('textColor').value = theme.text;
-        document.getElementById('glowColor').value = theme.glowColor;
-        
-        // Update active state in grid
-        document.querySelectorAll('.theme-card').forEach(card => {
-            card.classList.remove('active');
-            if (card.dataset.theme === themeName) {
-                card.classList.add('active');
-            }
-        });
-        
-        // Save to localStorage
-        localStorage.setItem('currentTheme', themeName);
-        localStorage.setItem('customColors', JSON.stringify(theme));
-        
-        this.showSaveNotification('Theme applied successfully!');
-    }
-    
-    loadTheme() {
-        // Load saved theme from localStorage
-        const savedTheme = localStorage.getItem('currentTheme');
-        const customColors = JSON.parse(localStorage.getItem('customColors') || 'null');
-        
-        if (savedTheme && this.themes[savedTheme]) {
-            this.applyTheme(savedTheme);
-        } else if (customColors) {
-            // Apply custom colors
-            this.applyCustomColors(customColors);
-        }
-        
-        // Load snow settings
-        this.loadSnowSettings();
-    }
-    
-    applyCustomColors(colors) {
-        for (const [key, value] of Object.entries(colors)) {
-            const cssVar = '--' + key.replace(/([A-Z])/g, '-$1').toLowerCase();
-            document.documentElement.style.setProperty(cssVar, value);
-        }
-        
-        // Update color pickers
-        if (colors.bg) document.getElementById('bgColor').value = colors.bg;
-        if (colors.accent) document.getElementById('accentColor').value = colors.accent;
-        if (colors.text) document.getElementById('textColor').value = colors.text;
-        if (colors.glowColor) document.getElementById('glowColor').value = colors.glowColor;
-        
-        // Mark custom theme as active
-        this.currentTheme = 'custom';
-        this.updateThemeGridActiveState();
-    }
-    
-    updateThemeGridActiveState() {
-        document.querySelectorAll('.theme-card').forEach(card => {
-            card.classList.remove('active');
-            if (card.dataset.theme === this.currentTheme) {
-                card.classList.add('active');
-            }
-        });
-    }
-    
-    resetTheme() {
-        this.applyTheme('default');
-        this.showSaveNotification('Theme reset to default!');
-    }
-    
-    loadSnowSettings() {
-        const saved = JSON.parse(localStorage.getItem('snowSettings') || 'null');
-        if (saved) {
-            // Update toggle
-            if (document.getElementById('snowToggle')) {
-                document.getElementById('snowToggle').checked = saved.enabled !== false;
-            }
-            
-            // Update sliders
-            if (document.getElementById('snowCount')) {
-                document.getElementById('snowCount').value = saved.count || 150;
-                document.getElementById('snowSize').value = saved.size || 3;
-                document.getElementById('snowSpeed').value = saved.speed || 1.2;
-                document.getElementById('snowColor').value = saved.color || '#ffffff';
+        // Test if a URL is accessible
+        async testURL(url, timeout = 5000) {
+            try {
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), timeout);
                 
-                // Update display values
-                document.getElementById('snowCountValue').textContent = saved.count || 150;
-                document.getElementById('snowSizeValue').textContent = saved.size || 3;
-                document.getElementById('snowSpeedValue').textContent = saved.speed || 1.2;
+                const response = await fetch(url, {
+                    method: 'HEAD',
+                    signal: controller.signal,
+                    mode: 'cors'
+                });
+                
+                clearTimeout(timeoutId);
+                return response.ok;
+            } catch (e) {
+                return false;
+            }
+        },
+
+        // Find a working CDN
+        async findWorkingCDN(user, repo, branch, testFile) {
+            if (this.workingCDN) return this.workingCDN;
+            
+            for (const cdn of this.cdnList) {
+                let testUrl;
+                
+                if (cdn.includes('jsdelivr')) {
+                    testUrl = `${cdn}${user}/${repo}@${branch}/${testFile}`;
+                } else if (cdn.includes('githack')) {
+                    testUrl = `${cdn}${user}/${repo}/${branch}/${testFile}`;
+                } else if (cdn.includes('githubusercontent')) {
+                    testUrl = `${cdn}${user}/${repo}/${branch}/${testFile}`;
+                } else if (cdn.includes('statically')) {
+                    testUrl = `${cdn}${user}/${repo}@${branch}/${testFile}`;
+                }
+                
+                console.log(`Testing CDN: ${testUrl}`);
+                
+                if (await this.testURL(testUrl)) {
+                    this.workingCDN = cdn;
+                    this.showStatus(`Using CDN: ${cdn.split('/')[2]}`);
+                    return cdn;
+                }
+            }
+            
+            this.showStatus('All CDNs blocked - using fallback mode', true);
+            return null;
+        },
+
+        // Build URL for specific CDN
+        buildURL(cdn, user, repo, branch, file) {
+            if (cdn.includes('jsdelivr')) {
+                return `${cdn}${user}/${repo}@${branch}/${file}`;
+            } else if (cdn.includes('githack')) {
+                return `${cdn}${user}/${repo}/${branch}/${file}`;
+            } else if (cdn.includes('githubusercontent')) {
+                return `${cdn}${user}/${repo}/${branch}/${file}`;
+            } else if (cdn.includes('statically')) {
+                return `${cdn}${user}/${repo}@${branch}/${file}`;
+            }
+            return null;
+        },
+
+        // Load resource with fallbacks
+        async loadWithFallback(user, repo, branch, file) {
+            // Try finding/using working CDN
+            const cdn = await this.findWorkingCDN(user, repo, branch, file);
+            
+            if (cdn) {
+                const url = this.buildURL(cdn, user, repo, branch, file);
+                try {
+                    const response = await fetch(url);
+                    if (response.ok) {
+                        return { url, data: await response.text() };
+                    }
+                } catch (e) {
+                    console.warn(`Failed to load from ${cdn}:`, e);
+                }
+            }
+            
+            // Try all CDNs as fallback
+            for (const fallbackCDN of this.cdnList) {
+                if (fallbackCDN === cdn) continue;
+                
+                const url = this.buildURL(fallbackCDN, user, repo, branch, file);
+                try {
+                    const response = await fetch(url);
+                    if (response.ok) {
+                        this.workingCDN = fallbackCDN;
+                        return { url, data: await response.text() };
+                    }
+                } catch (e) {
+                    continue;
+                }
+            }
+            
+            throw new Error(`All sources blocked for: ${file}`);
+        },
+
+        // Load image with fallbacks
+        loadImageWithFallback(imgElement, user, repo, branch, file, fallbackEmoji = '🎮') {
+            const urls = this.cdnList.map(cdn => this.buildURL(cdn, user, repo, branch, file));
+            let urlIndex = 0;
+            
+            const tryNext = () => {
+                if (urlIndex < urls.length) {
+                    imgElement.src = urls[urlIndex];
+                    urlIndex++;
+                } else {
+                    // All failed - show placeholder
+                    imgElement.classList.add('load-failed');
+                    imgElement.style.display = 'flex';
+                    imgElement.style.alignItems = 'center';
+                    imgElement.style.justifyContent = 'center';
+                    imgElement.alt = fallbackEmoji;
+                    
+                    // Replace with div showing emoji
+                    const placeholder = document.createElement('div');
+                    placeholder.className = 'game-cover placeholder';
+                    placeholder.textContent = fallbackEmoji;
+                    imgElement.parentNode.replaceChild(placeholder, imgElement);
+                }
+            };
+            
+            imgElement.onerror = tryNext;
+            tryNext();
+        }
+    };
+
+    // Check Font Awesome loaded
+    function checkFontAwesome() {
+        setTimeout(() => {
+            const testIcon = document.createElement('i');
+            testIcon.className = 'fa fa-check';
+            testIcon.style.position = 'absolute';
+            testIcon.style.left = '-9999px';
+            document.body.appendChild(testIcon);
+            
+            const style = window.getComputedStyle(testIcon);
+            const fontFamily = style.fontFamily;
+            
+            document.body.removeChild(testIcon);
+            
+            // If Font Awesome didn't load, enable fallback mode
+            if (!fontFamily.toLowerCase().includes('awesome')) {
+                console.log('Font Awesome CDN blocked - enabling emoji fallback');
+                document.body.classList.add('fa-fallback-mode');
+                SchoolSafeLoader.showStatus('Using emoji icons (FA blocked)', true);
+            }
+        }, 2000);
+    }
+
+    // Initialize
+    document.addEventListener('DOMContentLoaded', checkFontAwesome);
+    
+    // Expose globally
+    window.SchoolSafeLoader = SchoolSafeLoader;
+    </script>
+
+    <!-- ============================================ -->
+    <!-- MAIN SCRIPT LOADER WITH FALLBACKS -->
+    <!-- ============================================ -->
+    <script>
+    (async function() {
+        const GITHUB_USER = 'ProjectApex1243';
+        const GITHUB_REPO = 'Unblockedweb';
+        const GITHUB_BRANCH = 'master';
+        
+        // Script sources in priority order
+        const scriptSources = [
+            './script.js',                                                              // Local (same directory)
+            `https://cdn.jsdelivr.net/gh/${GITHUB_USER}/${GITHUB_REPO}@${GITHUB_BRANCH}/script.js`,
+            `https://rawcdn.githack.com/${GITHUB_USER}/${GITHUB_REPO}/${GITHUB_BRANCH}/script.js`,
+            `https://raw.githubusercontent.com/${GITHUB_USER}/${GITHUB_REPO}/${GITHUB_BRANCH}/script.js`,
+            `https://cdn.statically.io/gh/${GITHUB_USER}/${GITHUB_REPO}@${GITHUB_BRANCH}/script.js`
+        ];
+        
+        async function loadScript(url) {
+            return new Promise((resolve, reject) => {
+                const script = document.createElement('script');
+                script.src = url;
+                script.onload = () => resolve(url);
+                script.onerror = () => reject(new Error(`Failed: ${url}`));
+                document.body.appendChild(script);
+            });
+        }
+        
+        async function loadScriptAsText(url) {
+            try {
+                const response = await fetch(url);
+                if (!response.ok) throw new Error('Not OK');
+                const code = await response.text();
+                
+                // Execute the code
+                const script = document.createElement('script');
+                script.textContent = code;
+                document.body.appendChild(script);
+                
+                return url;
+            } catch (e) {
+                throw new Error(`Failed to fetch: ${url}`);
             }
         }
-    }
-    
-    setupEventListeners() {
-        // Snow controls
-        const snowCount = document.getElementById('snowCount');
-        const snowSize = document.getElementById('snowSize');
-        const snowSpeed = document.getElementById('snowSpeed');
         
-        if (snowCount) {
-            snowCount.addEventListener('input', (e) => {
-                document.getElementById('snowCountValue').textContent = e.target.value;
-            });
-        }
-        
-        if (snowSize) {
-            snowSize.addEventListener('input', (e) => {
-                document.getElementById('snowSizeValue').textContent = e.target.value;
-            });
-        }
-        
-        if (snowSpeed) {
-            snowSpeed.addEventListener('input', (e) => {
-                document.getElementById('snowSpeedValue').textContent = e.target.value;
-            });
-        }
-    }
-    
-    showSaveNotification(message) {
-        const notification = document.createElement('div');
-        notification.className = 'save-notification';
-        notification.textContent = message;
-        document.body.appendChild(notification);
-        
-        setTimeout(() => notification.classList.add('show'), 10);
-        
-        setTimeout(() => {
-            notification.classList.remove('show');
-            setTimeout(() => notification.remove(), 400);
-        }, 3000);
-    }
-}
-
-// Global functions for HTML onclick events
-function applyColorChange() {
-    // Auto-apply color changes as they happen
-    const customColors = {
-        bg: document.getElementById('bgColor').value,
-        accent: document.getElementById('accentColor').value,
-        text: document.getElementById('textColor').value,
-        glowColor: document.getElementById('glowColor').value,
-        accentDark: darkenColor(document.getElementById('accentColor').value, 20),
-        header: darkenColor(document.getElementById('bgColor').value, 20),
-        cardBg: darkenColor(document.getElementById('bgColor').value, 10)
-    };
-    
-    // Apply colors immediately
-    for (const [key, value] of Object.entries(customColors)) {
-        const cssVar = '--' + key.replace(/([A-Z])/g, '-$1').toLowerCase();
-        document.documentElement.style.setProperty(cssVar, value);
-    }
-    
-    // Mark as custom theme
-    window.themeManager.currentTheme = 'custom';
-    window.themeManager.updateThemeGridActiveState();
-}
-
-function saveCustomTheme() {
-    const themeManager = window.themeManager;
-    if (!themeManager) return;
-    
-    const customColors = {
-        bg: document.getElementById('bgColor').value,
-        accent: document.getElementById('accentColor').value,
-        text: document.getElementById('textColor').value,
-        glowColor: document.getElementById('glowColor').value,
-        accentDark: darkenColor(document.getElementById('accentColor').value, 20),
-        header: darkenColor(document.getElementById('bgColor').value, 20),
-        cardBg: darkenColor(document.getElementById('bgColor').value, 10)
-    };
-    
-    themeManager.applyCustomColors(customColors);
-    localStorage.setItem('customColors', JSON.stringify(customColors));
-    localStorage.setItem('currentTheme', 'custom');
-    themeManager.showSaveNotification('Custom theme saved!');
-}
-
-function darkenColor(color, percent) {
-    const num = parseInt(color.replace("#", ""), 16);
-    const amt = Math.round(2.55 * percent);
-    const R = (num >> 16) - amt;
-    const G = (num >> 8 & 0x00FF) - amt;
-    const B = (num & 0x0000FF) - amt;
-    
-    return "#" + (
-        0x1000000 +
-        (R < 255 ? (R < 1 ? 0 : R) : 255) * 0x10000 +
-        (G < 255 ? (G < 1 ? 0 : G) : 255) * 0x100 +
-        (B < 255 ? (B < 1 ? 0 : B) : 255)
-    ).toString(16).slice(1);
-}
-
-function resetTheme() {
-    const themeManager = window.themeManager;
-    if (themeManager) {
-        themeManager.resetTheme();
-    }
-}
-
-// Image Upload Functions
-function uploadImage() {
-    const input = document.getElementById('imageUpload');
-    if (!input.files[0]) {
-        alert('Please select an image file first!');
-        return;
-    }
-    
-    const reader = new FileReader();
-    reader.onload = function(e) {
-        const imageData = e.target.result;
-        const gameName = prompt('Enter the game name for this image:', '');
-        
-        if (gameName) {
-            saveImageToStorage(gameName, imageData);
-            updateImagesList();
-            updateGameCardsWithImages();
-            showSaveNotification('Image uploaded for ' + gameName + '!');
-        }
-    };
-    reader.readAsDataURL(input.files[0]);
-    
-    // Reset input
-    input.value = '';
-}
-
-function useImageUrl() {
-    const url = document.getElementById('imageUrlInput').value.trim();
-    if (!url) {
-        alert('Please enter an image URL!');
-        return;
-    }
-    
-    // Validate URL
-    if (!url.startsWith('http')) {
-        alert('Please enter a valid URL (should start with http:// or https://)');
-        return;
-    }
-    
-    const gameName = prompt('Enter the game name for this image:', '');
-    
-    if (gameName) {
-        saveImageToStorage(gameName, url);
-        updateImagesList();
-        updateGameCardsWithImages();
-        showSaveNotification('Image URL saved for ' + gameName + '!');
-        document.getElementById('imageUrlInput').value = '';
-    }
-}
-
-function saveImageToStorage(gameName, imageData) {
-    const images = JSON.parse(localStorage.getItem('gameImages') || '{}');
-    images[gameName.toLowerCase()] = imageData;
-    localStorage.setItem('gameImages', JSON.stringify(images));
-}
-
-function getImageForGame(gameName) {
-    const images = JSON.parse(localStorage.getItem('gameImages') || '{}');
-    return images[gameName.toLowerCase()] || null;
-}
-
-function removeImageForGame(gameName) {
-    const images = JSON.parse(localStorage.getItem('gameImages') || '{}');
-    delete images[gameName.toLowerCase()];
-    localStorage.setItem('gameImages', JSON.stringify(images));
-    updateImagesList();
-    updateGameCardsWithImages();
-}
-
-function clearAllImages() {
-    if (confirm('Are you sure you want to clear all custom images?')) {
-        localStorage.removeItem('gameImages');
-        updateImagesList();
-        updateGameCardsWithImages();
-        showSaveNotification('All images cleared!');
-    }
-}
-
-function updateImagesList() {
-    const imagesList = document.getElementById('uploadedImagesList');
-    if (!imagesList) return;
-    
-    const images = JSON.parse(localStorage.getItem('gameImages') || '{}');
-    const keys = Object.keys(images);
-    
-    if (keys.length === 0) {
-        imagesList.innerHTML = '<p style="color: var(--muted); text-align: center; padding: 20px;">No images uploaded yet</p>';
-        return;
-    }
-    
-    let html = '<div style="display: flex; flex-direction: column; gap: 10px;">';
-    keys.forEach(key => {
-        const imageData = images[key];
-        const isDataUrl = imageData.startsWith('data:image');
-        
-        html += `
-            <div style="display: flex; align-items: center; justify-content: space-between; padding: 10px; background: rgba(255,255,255,0.05); border-radius: 5px;">
-                <div style="display: flex; align-items: center; gap: 10px;">
-                    <div style="width: 40px; height: 40px; background: #333; border-radius: 5px; overflow: hidden;">
-                        ${isDataUrl ? 
-                            `<img src="${imageData}" style="width: 100%; height: 100%; object-fit: cover;">` :
-                            `<div style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; color: var(--accent);">🌐</div>`
-                        }
-                    </div>
-                    <span>${key}</span>
-                </div>
-                <button onclick="removeImageForGame('${key}')" style="background: #ff4444; border: none; color: white; padding: 5px 10px; border-radius: 5px; cursor: pointer; font-size: 12px;">Remove</button>
-            </div>
-        `;
-    });
-    html += '</div>';
-    
-    imagesList.innerHTML = html;
-}
-
-function updateGameCardsWithImages() {
-    const gameCards = document.querySelectorAll('.game-card');
-    const images = JSON.parse(localStorage.getItem('gameImages') || '{}');
-    
-    gameCards.forEach(card => {
-        const gameTitleElement = card.querySelector('.game-info h3');
-        if (!gameTitleElement) return;
-        
-        const gameName = gameTitleElement.textContent.toLowerCase();
-        const imageData = images[gameName];
-        
-        const imgElement = card.querySelector('.game-cover, .game-image');
-        if (imgElement) {
-            if (imageData) {
-                imgElement.src = imageData;
-                imgElement.style.background = 'none';
-                imgElement.classList.remove('placeholder');
-            } else {
-                imgElement.src = '';
-                imgElement.style.background = 'linear-gradient(135deg, var(--accentDark), var(--accent))';
-                imgElement.classList.add('placeholder');
-                imgElement.innerHTML = '🎮';
+        // Try each source
+        for (const source of scriptSources) {
+            try {
+                console.log(`Trying to load script from: ${source}`);
+                
+                // Try direct script tag first (faster if not blocked)
+                if (source.startsWith('./') || source.startsWith('/')) {
+                    await loadScript(source);
+                } else {
+                    // For CDN sources, try fetch first to handle CORS properly
+                    await loadScriptAsText(source);
+                }
+                
+                console.log(`✓ Script loaded successfully from: ${source}`);
+                SchoolSafeLoader.showStatus(`Script loaded from: ${source.split('/')[2] || 'local'}`);
+                return;
+                
+            } catch (e) {
+                console.warn(`✗ ${e.message}`);
+                continue;
             }
         }
-    });
-}
-
-function showSaveNotification(message) {
-    const themeManager = window.themeManager;
-    if (themeManager) {
-        themeManager.showSaveNotification(message);
-    } else {
-        const notification = document.createElement('div');
-        notification.className = 'save-notification';
-        notification.textContent = message;
-        document.body.appendChild(notification);
         
-        setTimeout(() => notification.classList.add('show'), 10);
+        // All sources failed
+        console.error('All script sources blocked!');
+        SchoolSafeLoader.showStatus('Script loading failed - check network', true);
         
-        setTimeout(() => {
-            notification.classList.remove('show');
-            setTimeout(() => notification.remove(), 400);
-        }, 3000);
-    }
-}
-
-function toggleSnow() {
-    if (!snowEffect) {
-        snowEffect = new SnowEffect();
-    }
-    
-    const enabled = snowEffect.toggle();
-    
-    // Show notification
-    showSaveNotification(`Snow effect ${enabled ? 'enabled' : 'disabled'}!`);
-}
-
-function updateSnowSettings() {
-    if (!snowEffect) {
-        snowEffect = new SnowEffect();
-    }
-    
-    const count = document.getElementById('snowCount').value;
-    const size = document.getElementById('snowSize').value;
-    const speed = document.getElementById('snowSpeed').value;
-    const color = document.getElementById('snowColor').value;
-    
-    // Update without saving to localStorage (live preview)
-    snowEffect.updateSettings(count, size, speed, color, false);
-    
-    // Update display values
-    document.getElementById('snowCountValue').textContent = count;
-    document.getElementById('snowSizeValue').textContent = size;
-    document.getElementById('snowSpeedValue').textContent = speed;
-}
-
-function saveSnowSettings() {
-    if (!snowEffect) {
-        snowEffect = new SnowEffect();
-    }
-    
-    const count = document.getElementById('snowCount').value;
-    const size = document.getElementById('snowSize').value;
-    const speed = document.getElementById('snowSpeed').value;
-    const color = document.getElementById('snowColor').value;
-    
-    // Save to localStorage
-    snowEffect.updateSettings(count, size, speed, color, true);
-    
-    // Show notification
-    showSaveNotification('Snow settings saved!');
-}
-
-function uploadBackground() {
-    const input = document.getElementById('backgroundUpload');
-    if (!input.files[0]) return;
-    
-    const reader = new FileReader();
-    reader.onload = function(e) {
-        const bgImage = `url(${e.target.result})`;
-        document.body.style.backgroundImage = bgImage;
-        document.body.style.backgroundSize = 'cover';
-        document.body.style.backgroundAttachment = 'fixed';
-        localStorage.setItem('customBackground', e.target.result);
+        const loader = document.getElementById('initial-loader');
+        const loadingText = loader.querySelector('.loading-text');
+        const gameCount = document.getElementById('gameCount');
         
-        showSaveNotification('Background uploaded!');
-    };
-    reader.readAsDataURL(input.files[0]);
-}
-
-function removeBackground() {
-    document.body.style.backgroundImage = '';
-    document.body.style.backgroundSize = '';
-    document.body.style.backgroundAttachment = '';
-    localStorage.removeItem('customBackground');
-    
-    showSaveNotification('Background removed!');
-}
-
-async function fetchBackgroundTemplates() {
-    try {
-        // Fetch the contents of the Backrounds folder from GitHub API
-        const response = await fetch('https://api.github.com/repos/ProjectApex1243/Backrounds/contents/');
-        const data = await response.json();
-        
-        if (!Array.isArray(data)) {
-            console.error('Failed to fetch backgrounds:', data.message);
-            return [];
-        }
-        
-        // Filter for image files and get the raw GitHub URLs
-        const backgrounds = data
-            .filter(file => /\.(jpg|jpeg|png|gif|webp)$/i.test(file.name))
-            .map(file => ({
-                name: file.name.replace(/\.[^.]+$/, ''), // Remove extension
-                url: file.download_url, // Raw GitHub URL for direct access
-                fullName: file.name
-            }));
-        
-        return backgrounds;
-    } catch (error) {
-        console.error('Error fetching background templates:', error);
-        return [];
-    }
-}
-
-async function populateBackgroundTemplates() {
-    const container = document.getElementById('backgroundTemplates');
-    if (!container) {
-        console.warn('backgroundTemplates container not found');
-        return;
-    }
-    
-    container.innerHTML = '<div class="loading-text">Loading backgrounds...</div>';
-    
-    const backgrounds = await fetchBackgroundTemplates();
-    
-    if (backgrounds.length === 0) {
-        container.innerHTML = '<p style="color: #ccc; text-align: center;">No backgrounds found</p>';
-        return;
-    }
-    
-    let html = '<div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 15px; width: 100%;">';
-    
-    backgrounds.forEach(bg => {
-        html += `
-            <div class="bg-template-item" onclick="applyBackgroundTemplate('${bg.url}', '${bg.fullName}')" title="${bg.name}">
-                <img src="${bg.url}" alt="${bg.name}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 8px;">
-                <div class="bg-template-label">${bg.name}</div>
-            </div>
+        loadingText.textContent = 'Network Restricted';
+        gameCount.innerHTML = `
+            <span style="color:#ff4444;">
+                Unable to load games.<br>
+                <small>Your network may be blocking game content.</small><br>
+                <small>Try using mobile data or a different network.</small>
+            </span>
         `;
-    });
-    
-    html += '</div>';
-    container.innerHTML = html;
-}
-
-function applyBackgroundTemplate(imageUrl, fileName) {
-    document.body.style.backgroundImage = `url('${imageUrl}')`;
-    document.body.style.backgroundSize = 'cover';
-    document.body.style.backgroundAttachment = 'fixed';
-    localStorage.setItem('customBackground', imageUrl);
-    localStorage.setItem('customBackgroundName', fileName);
-    
-    showSaveNotification(`Background applied: ${fileName}`);
-}
-
-function saveTeacherLink() {
-    const link = document.getElementById('teacherLinkInput').value.trim();
-    if (link) {
-        localStorage.setItem('teacherLink', link);
-        document.getElementById('teacherLinkStatus').innerHTML = `
-            <div class="teacher-link-active">
-                <span>✓ Link Saved: ${link}</span>
-                <button class="notif-btn" onclick="removeTeacherLink()" style="padding: 5px 10px; font-size: 12px;">Remove</button>
-            </div>
-        `;
-        
-        showSaveNotification('Teacher link saved!');
-    }
-}
-
-function removeTeacherLink() {
-    localStorage.removeItem('teacherLink');
-    document.getElementById('teacherLinkStatus').innerHTML = '';
-}
-
-function saveTabCustomization() {
-    const title = document.getElementById('tabTitleInput').value.trim();
-    const icon = document.getElementById('tabIconInput').value.trim();
-    
-    if (title) {
-        document.title = title;
-        localStorage.setItem('tabTitle', title);
-    }
-    
-    if (icon) {
-        let link = document.querySelector("link[rel*='icon']") || document.createElement('link');
-        link.type = 'image/x-icon';
-        link.rel = 'shortcut icon';
-        link.href = icon;
-        document.head.appendChild(link);
-        localStorage.setItem('tabIcon', icon);
-    }
-    
-    showSaveNotification('Tab settings saved!');
-}
-
-function resetTabCustomization() {
-    document.title = 'Game Launcher';
-    localStorage.removeItem('tabTitle');
-    localStorage.removeItem('tabIcon');
-    
-    // Reset favicon to default
-    let link = document.querySelector("link[rel*='icon']");
-    if (link) {
-        link.href = '#';
-    }
-    
-    document.getElementById('tabTitleInput').value = '';
-    document.getElementById('tabIconInput').value = '';
-    
-    showSaveNotification('Tab settings reset!');
-}
-
-// Panel toggle functions
-function toggleSettings() {
-    const panel = document.getElementById('settingsPanel');
-    const overlay = document.getElementById('notificationsOverlay');
-    panel.classList.toggle('open');
-    overlay.classList.toggle('active');
-    
-    // Close notifications if open
-    const notifPanel = document.getElementById('notificationsPanel');
-    notifPanel.classList.remove('open');
-    
-    // Update images list when opening settings
-    if (panel.classList.contains('open')) {
-        updateImagesList();
-    }
-}
-
-function toggleNotifications() {
-    const panel = document.getElementById('notificationsPanel');
-    const overlay = document.getElementById('notificationsOverlay');
-    panel.classList.toggle('open');
-    overlay.classList.toggle('active');
-    
-    // Close settings if open
-    const settingsPanel = document.getElementById('settingsPanel');
-    settingsPanel.classList.remove('open');
-}
-
-function closeAllPanels() {
-    document.getElementById('settingsPanel').classList.remove('open');
-    document.getElementById('notificationsPanel').classList.remove('open');
-    document.getElementById('notificationsOverlay').classList.remove('active');
-}
-
-// Initialize everything when DOM is loaded
-document.addEventListener('DOMContentLoaded', function() {
-    // Initialize theme manager
-    window.themeManager = new ThemeManager();
-    
-    // Initialize snow effect
-    snowEffect = new SnowEffect();
-    
-    // Load saved background
-    const savedBackground = localStorage.getItem('customBackground');
-    if (savedBackground) {
-        document.body.style.backgroundImage = `url(${savedBackground})`;
-        document.body.style.backgroundSize = 'cover';
-        document.body.style.backgroundAttachment = 'fixed';
-    }
-    
-    // Load saved teacher link
-    const savedTeacherLink = localStorage.getItem('teacherLink');
-    if (savedTeacherLink) {
-        document.getElementById('teacherLinkInput').value = savedTeacherLink;
-        document.getElementById('teacherLinkStatus').innerHTML = `
-            <div class="teacher-link-active">
-                <span>✓ Link Saved: ${savedTeacherLink}</span>
-                <button class="notif-btn" onclick="removeTeacherLink()" style="padding: 5px 10px; font-size: 12px;">Remove</button>
-            </div>
-        `;
-    }
-    
-    // Load saved tab customization
-    const savedTitle = localStorage.getItem('tabTitle');
-    const savedIcon = localStorage.getItem('tabIcon');
-    
-    if (savedTitle) {
-        document.title = savedTitle;
-        document.getElementById('tabTitleInput').value = savedTitle;
-    }
-    
-    if (savedIcon) {
-        document.getElementById('tabIconInput').value = savedIcon;
-        let link = document.querySelector("link[rel*='icon']") || document.createElement('link');
-        link.type = 'image/x-icon';
-        link.rel = 'shortcut icon';
-        link.href = savedIcon;
-        document.head.appendChild(link);
-    }
-    
-    // Update snow slider values
-    if (snowEffect) {
-        snowEffect.updateSliderValues();
-    }
-    
-    // Initial update of images list
-    updateImagesList();
-    
-    // Populate background templates from GitHub
-    populateBackgroundTemplates();
-});
-
-// Dynamically load script.js with fallback support
-(function() {
-    const script = document.createElement('script');
-    
-    // Try loading from same directory first (works locally and on GitHub Pages)
-    script.src = './script.js';
-    
-    script.onerror = function() {
-        console.warn('Failed to load ./script.js, trying CDN...');
-        // Fallback to CDN if local fails
-        const cdnScript = document.createElement('script');
-        cdnScript.src = 'https://cdn.jsdelivr.net/gh/ProjectApex1243/Unblockedweb@master/script.js';
-        cdnScript.onerror = function() {
-            console.error('Failed to load script.js from both local and CDN!');
-            alert('Failed to load game launcher. Please check your internet connection.');
-        };
-        document.body.appendChild(cdnScript);
-    };
-    
-    document.body.appendChild(script);
-})();
-</script>
-
+    })();
+    </script>
 </body>
 </html>
