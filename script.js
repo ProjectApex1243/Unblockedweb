@@ -4382,11 +4382,11 @@ const GAMES_JSON = [
   },
 {
     "id": 596,
-    "name": "",
-    "cover": ``,
-    "url": "",
-    "author": "Gzh0821",      // ← Added comma
-    "special": ["emulator"],   // ← Added comma
+    "name": "Game 596",
+    "cover": `${COVER_URL}/placeholder.png`,
+    "url": "game-596.html",
+    "author": "Gzh0821",
+    "special": ["emulator"],
     "featured": true
 },
   {
