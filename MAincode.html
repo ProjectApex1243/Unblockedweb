@@ -1333,6 +1333,8 @@
         // All failed
         titleEl.textContent = title + ' (Failed to load)';
         frame.srcdoc = '<html><body style="background:#1a0000;color:white;display:flex;align-items:center;justify-content:center;height:100vh;font-family:Arial;"><div style="text-align:center;"><h1>Failed to load game</h1><p>Network may be blocking game content</p></div></body></html>';
+    }
+
     function closeGame() {
         const modal = document.getElementById('gameModal');
         const frame = document.getElementById('gameFrame');
