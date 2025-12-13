@@ -564,6 +564,95 @@
             background: linear-gradient(135deg, var(--accentDark), var(--accent));
             font-size: 32px;
         }
+        
+        .game-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.95);
+            z-index: 3000;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 20px;
+            background: var(--header);
+            border-bottom: 2px solid var(--accent);
+        }
+        
+        .modal-header h2 {
+            color: var(--text);
+            font-size: 20px;
+        }
+        
+        .modal-controls {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .modal-controls button {
+            background: var(--accent);
+            border: none;
+            color: white;
+            padding: 10px 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .modal-controls button:hover {
+            background: var(--glowColor);
+            box-shadow: 0 0 15px var(--glowColor);
+        }
+        
+        .modal-body {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .modal-body iframe {
+            width: 100%;
+            height: 100%;
+            border: 2px solid var(--accent);
+            border-radius: 10px;
+            background: #000;
+        }
+        
+        .game-badge {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            background: var(--accent);
+            color: white;
+            padding: 3px 8px;
+            border-radius: 5px;
+            font-size: 10px;
+            font-weight: bold;
+            text-transform: uppercase;
+            z-index: 10;
+        }
+        
+        .game-badge.featured {
+            background: gold;
+            color: #000;
+        }
+        
+        .game-badge.flash {
+            background: #ff6b6b;
+        }
+        
+        .game-badge.port {
+            background: #4ecdc4;
+        }
     </style>
 </head>
 <body>
@@ -579,7 +668,62 @@
 
     <!-- Main Content (hidden until loaded) -->
     <div id="mainContent" class="main-content">
-        <!-- Your existing content here -->
+        <div class="header">
+            <h1><i class="fas fa-gamepad"></i> Game Launcher</h1>
+        </div>
+        
+        <div class="controls">
+            <div class="search-container">
+                <input type="text" class="search-box" id="searchBox" placeholder="Search games...">
+                <button class="clear-search-btn" id="clearSearch"><i class="fas fa-times"></i></button>
+            </div>
+            <select class="select-box" id="sortSelect">
+                <option value="name">Sort by Name</option>
+                <option value="id">Sort by ID</option>
+                <option value="author">Sort by Author</option>
+                <option value="random">Random</option>
+            </select>
+            <select class="select-box" id="filterSelect">
+                <option value="all">All Games</option>
+                <option value="featured">Featured</option>
+                <option value="flash">Flash Games</option>
+                <option value="port">Ports</option>
+                <option value="emulator">Emulators</option>
+                <option value="tools">Tools</option>
+            </select>
+        </div>
+        
+        <div class="alphabet-nav" id="alphabetNav"></div>
+        
+        <div id="featuredSection" style="display:none;">
+            <h2 class="section-header"><i class="fas fa-star"></i> Featured Games</h2>
+            <div class="games-grid" id="featuredGrid"></div>
+        </div>
+        
+        <div id="gamesContainer">
+            <div class="games-grid" id="gamesGrid"></div>
+        </div>
+        
+        <div id="noResults" style="display:none; text-align:center; padding:50px; color:var(--muted);">
+            <i class="fas fa-search" style="font-size:48px; margin-bottom:20px;"></i>
+            <h3>No games found</h3>
+            <p>Try a different search term or filter</p>
+        </div>
+    </div>
+    
+    <!-- Game Player Modal -->
+    <div id="gameModal" class="game-modal" style="display:none;">
+        <div class="modal-header">
+            <h2 id="modalGameTitle">Game Title</h2>
+            <div class="modal-controls">
+                <button onclick="toggleFullscreen()" title="Fullscreen"><i class="fas fa-expand"></i></button>
+                <button onclick="refreshGame()" title="Refresh"><i class="fas fa-rotate-right"></i></button>
+                <button onclick="closeGame()" title="Close"><i class="fas fa-times"></i></button>
+            </div>
+        </div>
+        <div class="modal-body">
+            <iframe id="gameFrame" src="" allowfullscreen></iframe>
+        </div>
     </div>
 
     <!-- ============================================ -->
@@ -869,6 +1013,321 @@
             </span>
         `;
     })();
+    </script>
+    
+    <!-- ============================================ -->
+    <!-- GAME RENDERING & UI LOGIC -->
+    <!-- ============================================ -->
+    <script>
+    // Wait for script.js to load, then initialize UI
+    function waitForGamesData(callback, maxAttempts = 50) {
+        let attempts = 0;
+        const check = () => {
+            attempts++;
+            if (typeof GAMES_JSON !== 'undefined' && GAMES_JSON.length > 0) {
+                callback();
+            } else if (attempts < maxAttempts) {
+                setTimeout(check, 100);
+            } else {
+                console.error('GAMES_JSON not loaded after max attempts');
+                document.getElementById('gameCount').innerHTML = '<span style="color:#ff4444;">Failed to load game data</span>';
+            }
+        };
+        check();
+    }
+
+    // Main initialization
+    waitForGamesData(() => {
+        console.log('GAMES_JSON loaded with', GAMES_JSON.length, 'games');
+        initializeGameLauncher();
+    });
+
+    let allGames = [];
+    let filteredGames = [];
+    let currentFilter = 'all';
+    let currentSort = 'name';
+    let searchTerm = '';
+
+    function initializeGameLauncher() {
+        // Filter out empty/invalid games
+        allGames = GAMES_JSON.filter(g => g && g.id >= 0 && g.name && g.name.trim() !== '');
+        filteredGames = [...allGames];
+        
+        // Update loader text
+        document.getElementById('gameCount').textContent = `Loading ${allGames.length} games...`;
+        
+        // Build alphabet navigation
+        buildAlphabetNav();
+        
+        // Setup event listeners
+        setupEventListeners();
+        
+        // Initial render
+        renderGames();
+        
+        // Hide loader, show content
+        setTimeout(() => {
+            document.getElementById('initial-loader').style.display = 'none';
+            document.getElementById('mainContent').style.display = 'block';
+        }, 500);
+    }
+
+    function buildAlphabetNav() {
+        const nav = document.getElementById('alphabetNav');
+        const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ#'.split('');
+        const usedLetters = new Set(allGames.map(g => {
+            const first = g.name.charAt(0).toUpperCase();
+            return /[A-Z]/.test(first) ? first : '#';
+        }));
+        
+        nav.innerHTML = letters.map(letter => {
+            const hasGames = usedLetters.has(letter);
+            return `<div class="alphabet-letter ${hasGames ? '' : 'disabled'}" 
+                        onclick="${hasGames ? `scrollToLetter('${letter}')` : ''}">${letter}</div>`;
+        }).join('');
+    }
+
+    function setupEventListeners() {
+        // Search
+        const searchBox = document.getElementById('searchBox');
+        const clearBtn = document.getElementById('clearSearch');
+        
+        searchBox.addEventListener('input', (e) => {
+            searchTerm = e.target.value.toLowerCase();
+            clearBtn.style.display = searchTerm ? 'block' : 'none';
+            filterAndRender();
+        });
+        
+        clearBtn.addEventListener('click', () => {
+            searchBox.value = '';
+            searchTerm = '';
+            clearBtn.style.display = 'none';
+            filterAndRender();
+        });
+        
+        // Sort
+        document.getElementById('sortSelect').addEventListener('change', (e) => {
+            currentSort = e.target.value;
+            filterAndRender();
+        });
+        
+        // Filter
+        document.getElementById('filterSelect').addEventListener('change', (e) => {
+            currentFilter = e.target.value;
+            filterAndRender();
+        });
+    }
+
+    function filterAndRender() {
+        // Filter
+        filteredGames = allGames.filter(game => {
+            // Search filter
+            if (searchTerm) {
+                const matchName = game.name.toLowerCase().includes(searchTerm);
+                const matchAuthor = game.author && game.author.toLowerCase().includes(searchTerm);
+                if (!matchName && !matchAuthor) return false;
+            }
+            
+            // Category filter
+            if (currentFilter !== 'all') {
+                if (currentFilter === 'featured') {
+                    if (!game.featured) return false;
+                } else {
+                    if (!game.special || !game.special.includes(currentFilter)) return false;
+                }
+            }
+            
+            return true;
+        });
+        
+        // Sort
+        filteredGames.sort((a, b) => {
+            switch (currentSort) {
+                case 'name':
+                    return a.name.localeCompare(b.name);
+                case 'id':
+                    return a.id - b.id;
+                case 'author':
+                    return (a.author || 'ZZZ').localeCompare(b.author || 'ZZZ');
+                case 'random':
+                    return Math.random() - 0.5;
+                default:
+                    return 0;
+            }
+        });
+        
+        renderGames();
+    }
+
+    function renderGames() {
+        const grid = document.getElementById('gamesGrid');
+        const featuredGrid = document.getElementById('featuredGrid');
+        const featuredSection = document.getElementById('featuredSection');
+        const noResults = document.getElementById('noResults');
+        
+        // Show/hide no results
+        if (filteredGames.length === 0) {
+            grid.innerHTML = '';
+            noResults.style.display = 'block';
+            featuredSection.style.display = 'none';
+            return;
+        }
+        
+        noResults.style.display = 'none';
+        
+        // Render featured if showing all
+        if (currentFilter === 'all' && !searchTerm) {
+            const featured = filteredGames.filter(g => g.featured);
+            if (featured.length > 0) {
+                featuredSection.style.display = 'block';
+                featuredGrid.innerHTML = featured.map(g => createGameCard(g)).join('');
+            } else {
+                featuredSection.style.display = 'none';
+            }
+        } else {
+            featuredSection.style.display = 'none';
+        }
+        
+        // Render main grid
+        grid.innerHTML = filteredGames.map(g => createGameCard(g)).join('');
+        
+        // Setup image fallbacks
+        setupImageFallbacks();
+    }
+
+    function createGameCard(game) {
+        let badge = '';
+        if (game.featured) {
+            badge = '<span class="game-badge featured">★ Featured</span>';
+        } else if (game.special && game.special.includes('flash')) {
+            badge = '<span class="game-badge flash">Flash</span>';
+        } else if (game.special && game.special.includes('port')) {
+            badge = '<span class="game-badge port">Port</span>';
+        }
+        
+        return `
+            <div class="game-card" onclick="loadGame('${game.url}', '${game.name.replace(/'/g, "\\'")}')">
+                ${badge}
+                <img class="game-cover" 
+                     src="${game.cover}" 
+                     alt="${game.name}"
+                     loading="lazy"
+                     onerror="this.onerror=null; handleImageError(this, '${game.name}');">
+                <div class="game-info">
+                    <h3>${game.name}</h3>
+                    ${game.author ? `<small style="color:var(--muted);font-size:11px;">${game.author}</small>` : ''}
+                </div>
+            </div>
+        `;
+    }
+
+    function handleImageError(img, gameName) {
+        // Try alternative CDNs
+        const currentSrc = img.src;
+        const cdns = [
+            'cdn.jsdelivr.net',
+            'cdn.statically.io',
+            'rawcdn.githack.com',
+            'raw.githubusercontent.com'
+        ];
+        
+        let triedAll = true;
+        for (const cdn of cdns) {
+            if (!currentSrc.includes(cdn)) {
+                // Try this CDN
+                const filename = currentSrc.split('/').pop();
+                const newUrl = `https://${cdn}/gh/ProjectApex1243/Covers-for-web@master/${filename}`;
+                img.src = newUrl;
+                triedAll = false;
+                break;
+            }
+        }
+        
+        if (triedAll) {
+            // All CDNs failed - show placeholder
+            const placeholder = document.createElement('div');
+            placeholder.className = 'game-cover placeholder';
+            placeholder.textContent = '🎮';
+            placeholder.style.cssText = 'display:flex;align-items:center;justify-content:center;font-size:48px;background:linear-gradient(135deg,var(--accentDark),var(--accent));';
+            img.parentNode.replaceChild(placeholder, img);
+        }
+    }
+
+    function setupImageFallbacks() {
+        // Additional fallback setup if needed
+    }
+
+    function scrollToLetter(letter) {
+        const games = document.querySelectorAll('.game-card h3');
+        for (const title of games) {
+            const firstChar = title.textContent.charAt(0).toUpperCase();
+            const matches = letter === '#' ? !/[A-Z]/.test(firstChar) : firstChar === letter;
+            if (matches) {
+                title.closest('.game-card').scrollIntoView({ behavior: 'smooth', block: 'center' });
+                break;
+            }
+        }
+    }
+
+    // Game player functions
+    function loadGame(url, title) {
+        const modal = document.getElementById('gameModal');
+        const frame = document.getElementById('gameFrame');
+        const titleEl = document.getElementById('modalGameTitle');
+        
+        // Build full URL using working CDN
+        let gameUrl = url;
+        if (!url.startsWith('http')) {
+            if (typeof CDN_CONFIG !== 'undefined' && CDN_CONFIG.workingCDN) {
+                gameUrl = CDN_CONFIG.getContentURL(url);
+            } else {
+                gameUrl = `https://cdn.jsdelivr.net/gh/ProjectApex1243/Unblockedweb@master/${url}`;
+            }
+        }
+        
+        titleEl.textContent = title;
+        frame.src = gameUrl;
+        modal.style.display = 'flex';
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closeGame() {
+        const modal = document.getElementById('gameModal');
+        const frame = document.getElementById('gameFrame');
+        
+        frame.src = '';
+        modal.style.display = 'none';
+        document.body.style.overflow = '';
+    }
+
+    function refreshGame() {
+        const frame = document.getElementById('gameFrame');
+        frame.src = frame.src;
+    }
+
+    function toggleFullscreen() {
+        const frame = document.getElementById('gameFrame');
+        if (frame.requestFullscreen) {
+            frame.requestFullscreen();
+        } else if (frame.webkitRequestFullscreen) {
+            frame.webkitRequestFullscreen();
+        } else if (frame.msRequestFullscreen) {
+            frame.msRequestFullscreen();
+        }
+    }
+
+    // Close modal on escape
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') closeGame();
+    });
+
+    // Expose functions globally
+    window.loadGame = loadGame;
+    window.closeGame = closeGame;
+    window.refreshGame = refreshGame;
+    window.toggleFullscreen = toggleFullscreen;
+    window.scrollToLetter = scrollToLetter;
+    window.handleImageError = handleImageError;
     </script>
 </body>
 </html>
