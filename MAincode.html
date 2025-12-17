@@ -13015,13 +13015,36 @@ showSaveIndicator();
 
 // ===== BACKGROUND MANAGEMENT =====
 function initBackgroundManager() {
-// Load saved backgrounds
-const saved = localStorage.getItem(STORAGE_KEYS.CUSTOM_BACKGROUNDS);
-if (saved) {
-customBackgrounds = JSON.parse(saved);
-}
+// Load backgrounds from GitHub repository
+const githubBackgrounds = [
+'1122271.png',
+'581960168_17876598267439017_9051999544655489224.png',
+'634766-for-those-who-love-clean-and-minimal-wallpaper-1920-x-1080-wallpaper.jpg',
+'DQPCiQnWsAEgUdh.png',
+'GOT.png',
+'MGA7163_Nero_AI_Image_Upscaler_Photo_Face.jpeg',
+'Screenshot_2025-11-08_220624.png',
+'Screenshot_2025-11-08_220947.png',
+'bf2b2933809288d9879993f255eb120a.png',
+'matrices-glassdots-desktop-20251207-174319.png',
+'matrices-glassdots-desktop-20251207-180603.png',
+'matrices-valuealiasing-desktop-20251207-181228.png',
+'matrices-valuealiasing-print-original-landscape-20251207-174553.png',
+'matrices-wallpaper-20251207-181439.png',
+'matrices_pp_2png.png',
+'matrices_pp_4png.png',
+'porsche-rsr-neonwave.png',
+'wallhaven-eyo7lk.jpg',
+'wp15305517.jpg',
+'zaza-Picsart-AiImageEnhancer.png'
+];
 
-// Load active background
+// Convert to GitHub raw URLs
+customBackgrounds = githubBackgrounds.map(filename =>
+`https://raw.githubusercontent.com/ProjectApex1243/Backrounds/main/${filename}`
+);
+
+// Load active background from localStorage
 const activeIndex = localStorage.getItem(STORAGE_KEYS.ACTIVE_BACKGROUND);
 if (activeIndex !== null) {
 activeBackgroundIndex = parseInt(activeIndex);
@@ -13041,7 +13064,7 @@ applyActiveBackground();
 
 function renderBackgroundSlots() {
 const container = document.getElementById('backgroundSlots');
-const maxSlots = 8;
+const maxSlots = 20;
 
 container.innerHTML = '';
 
@@ -13068,10 +13091,7 @@ removeBackground(i);
 };
 slot.appendChild(removeBtn);
 
-const label = document.createElement('div');
-label.className = 'bg-label';
-label.textContent = `BG ${i + 1}`;
-slot.appendChild(label);
+// Label removed to hide background names
 
 slot.onclick = () => setActiveBackground(i);
 } else {
