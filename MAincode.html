@@ -864,6 +864,143 @@ opacity: 1;
 transform: translateY(0);
 }
 
+/* Debug Console */
+.debug-console {
+position: fixed;
+bottom: -600px;
+left: 50%;
+transform: translateX(-50%);
+width: 90%;
+max-width: 1200px;
+height: 500px;
+background: linear-gradient(145deg, #0a0a0a, #1a1a1a);
+border: 3px solid var(--accent);
+border-radius: 15px 15px 0 0;
+box-shadow: 0 -5px 30px rgba(255, 0, 0, 0.5);
+transition: bottom 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+z-index: 2000;
+display: flex;
+flex-direction: column;
+overflow: hidden;
+}
+
+.debug-console.open {
+bottom: 0;
+}
+
+.debug-console-header {
+background: linear-gradient(145deg, var(--accent), var(--accentDark));
+padding: 15px 20px;
+display: flex;
+justify-content: space-between;
+align-items: center;
+border-bottom: 2px solid var(--accent);
+}
+
+.debug-console-header h3 {
+font-size: 18px;
+color: var(--text);
+margin: 0;
+text-shadow: 0 0 10px var(--glowColor);
+}
+
+.debug-console-controls {
+display: flex;
+gap: 10px;
+}
+
+.debug-btn {
+background: rgba(0, 0, 0, 0.3);
+border: 2px solid rgba(255, 255, 255, 0.3);
+color: var(--text);
+padding: 5px 15px;
+border-radius: 5px;
+cursor: pointer;
+font-size: 14px;
+font-weight: bold;
+transition: all 0.3s;
+}
+
+.debug-btn:hover {
+background: rgba(255, 255, 255, 0.2);
+border-color: rgba(255, 255, 255, 0.5);
+}
+
+.debug-console-content {
+flex: 1;
+overflow-y: auto;
+padding: 15px;
+font-family: 'Courier New', monospace;
+font-size: 13px;
+background: #000;
+}
+
+.debug-log-entry {
+padding: 8px 12px;
+margin-bottom: 5px;
+border-left: 3px solid #888;
+background: rgba(255, 255, 255, 0.05);
+border-radius: 3px;
+word-wrap: break-word;
+}
+
+.debug-log-entry.log {
+border-left-color: #4a9eff;
+color: #ddd;
+}
+
+.debug-log-entry.warn {
+border-left-color: #ffa500;
+color: #ffcc80;
+background: rgba(255, 165, 0, 0.1);
+}
+
+.debug-log-entry.error {
+border-left-color: #ff4444;
+color: #ffaaaa;
+background: rgba(255, 68, 68, 0.1);
+}
+
+.debug-log-entry.info {
+border-left-color: #00ff88;
+color: #88ffcc;
+}
+
+.debug-log-timestamp {
+color: #888;
+font-size: 11px;
+margin-right: 10px;
+}
+
+.debug-log-type {
+display: inline-block;
+padding: 2px 8px;
+border-radius: 3px;
+font-size: 11px;
+font-weight: bold;
+margin-right: 10px;
+}
+
+.debug-log-type.log {
+background: #4a9eff;
+color: #000;
+}
+
+.debug-log-type.warn {
+background: #ffa500;
+color: #000;
+}
+
+.debug-log-type.error {
+background: #ff4444;
+color: #fff;
+}
+
+.debug-log-type.info {
+background: #00ff88;
+color: #000;
+}
+
 /* Notifications Panel */
 .notifications-panel {
 position: fixed;
@@ -8169,6 +8306,24 @@ Press ESC to exit fullscreen
 ✓ Settings Saved!
 </div>
 
+<!-- Debug Console -->
+<div id="debugConsole" class="debug-console">
+<div class="debug-console-header">
+<h3>🐛 Debug Console (Press * to toggle)</h3>
+<div class="debug-console-controls">
+<button class="debug-btn" onclick="clearDebugConsole()">🗑️ Clear</button>
+<button class="debug-btn" onclick="toggleDebugConsole()">✖ Close</button>
+</div>
+</div>
+<div class="debug-console-content" id="debugConsoleContent">
+<div class="debug-log-entry info">
+<span class="debug-log-timestamp">${new Date().toLocaleTimeString()}</span>
+<span class="debug-log-type info">INFO</span>
+Debug console initialized. Press * key to toggle.
+</div>
+</div>
+</div>
+
 <script>
 // ===== CONFIGURATION =====
 const GITHUB_USER = 'ProjectApex1243';
@@ -13355,6 +13510,11 @@ if (e.key === 'Escape') {
 const link = localStorage.getItem(STORAGE_KEYS.TEACHER_LINK) || 'https://classroom.google.com';
 window.open(link, '_blank');
 }
+// Toggle debug console with * key
+if (e.key === '*') {
+e.preventDefault();
+toggleDebugConsole();
+}
 });
 
 // ===== RESET SETTINGS =====
@@ -13366,6 +13526,109 @@ Object.values(STORAGE_KEYS).forEach(key => localStorage.removeItem(key));
 alert('Settings reset! The page will reload.');
 location.reload();
 }
+}
+
+// ===== DEBUG CONSOLE =====
+const debugLogs = [];
+const MAX_DEBUG_LOGS = 500;
+
+// Override console methods to capture logs
+const originalConsole = {
+log: console.log,
+warn: console.warn,
+error: console.error,
+info: console.info
+};
+
+function addDebugLog(type, args) {
+const timestamp = new Date().toLocaleTimeString();
+const message = Array.from(args).map(arg => {
+if (typeof arg === 'object') {
+try {
+return JSON.stringify(arg, null, 2);
+} catch (e) {
+return String(arg);
+}
+}
+return String(arg);
+}).join(' ');
+
+debugLogs.push({ type, timestamp, message });
+if (debugLogs.length > MAX_DEBUG_LOGS) {
+debugLogs.shift();
+}
+
+const content = document.getElementById('debugConsoleContent');
+if (content) {
+const entry = document.createElement('div');
+entry.className = `debug-log-entry ${type}`;
+entry.innerHTML = `
+<span class="debug-log-timestamp">${timestamp}</span>
+<span class="debug-log-type ${type}">${type.toUpperCase()}</span>
+<span>${escapeHtml(message)}</span>
+`;
+content.appendChild(entry);
+content.scrollTop = content.scrollHeight;
+
+// Keep only last MAX_DEBUG_LOGS entries in DOM
+const entries = content.querySelectorAll('.debug-log-entry');
+if (entries.length > MAX_DEBUG_LOGS) {
+entries[0].remove();
+}
+}
+}
+
+function escapeHtml(text) {
+const div = document.createElement('div');
+div.textContent = text;
+return div.innerHTML;
+}
+
+console.log = function(...args) {
+originalConsole.log.apply(console, args);
+addDebugLog('log', args);
+};
+
+console.warn = function(...args) {
+originalConsole.warn.apply(console, args);
+addDebugLog('warn', args);
+};
+
+console.error = function(...args) {
+originalConsole.error.apply(console, args);
+addDebugLog('error', args);
+};
+
+console.info = function(...args) {
+originalConsole.info.apply(console, args);
+addDebugLog('info', args);
+};
+
+// Capture uncaught errors
+window.addEventListener('error', (event) => {
+addDebugLog('error', [`Uncaught Error: ${event.message}`, `At: ${event.filename}:${event.lineno}:${event.colno}`]);
+});
+
+// Capture unhandled promise rejections
+window.addEventListener('unhandledrejection', (event) => {
+addDebugLog('error', [`Unhandled Promise Rejection: ${event.reason}`]);
+});
+
+function toggleDebugConsole() {
+const console = document.getElementById('debugConsole');
+console.classList.toggle('open');
+}
+
+function clearDebugConsole() {
+debugLogs.length = 0;
+const content = document.getElementById('debugConsoleContent');
+content.innerHTML = `
+<div class="debug-log-entry info">
+<span class="debug-log-timestamp">${new Date().toLocaleTimeString()}</span>
+<span class="debug-log-type info">INFO</span>
+Debug console cleared.
+</div>
+`;
 }
 
 // ===== NAVIGATION =====
@@ -13528,26 +13791,67 @@ titleEl.textContent = `🎮 ${title}`;
 frame.srcdoc = '<div style="display:flex;align-items:center;justify-content:center;height:100vh;font-family:Arial;background:#1a1a2e;color:#fff;"><h2>Loading game...</h2></div>';
 container.style.display = 'block';
 
+console.log(`🎮 Loading game: ${title} from ${url}`);
+
+// Multiple CDN providers for school wifi compatibility
+const cdnProviders = [
+{
+name: 'jsDelivr',
+getUrl: (user, repo, branch, path) => `https://cdn.jsdelivr.net/gh/${user}/${repo}@${branch}/${path}`,
+purge: (user, repo, branch, path) => `https://purge.jsdelivr.net/gh/${user}/${repo}@${branch}/${path}`
+},
+{
+name: 'GitHub Raw',
+getUrl: (user, repo, branch, path) => `https://raw.githubusercontent.com/${user}/${repo}/${branch}/${path}`,
+purge: null
+},
+{
+name: 'GitHack',
+getUrl: (user, repo, branch, path) => `https://raw.githack.com/${user}/${repo}/${branch}/${path}`,
+purge: null
+},
+{
+name: 'Statically',
+getUrl: (user, repo, branch, path) => `https://cdn.statically.io/gh/${user}/${repo}/${branch}/${path}`,
+purge: null
+}
+];
+
+let htmlContent = null;
+let lastError = null;
+let successProvider = null;
+
+// Try each CDN provider
+for (const provider of cdnProviders) {
 try {
-// Construct GitHub URL using jsDelivr CDN
-const gameUrl = `https://cdn.jsdelivr.net/gh/${GITHUB_USER}/${GITHUB_REPO}@${GITHUB_BRANCH}/${url}`;
+console.log(`Trying ${provider.name}...`);
+const gameUrl = provider.getUrl(GITHUB_USER, GITHUB_REPO, GITHUB_BRANCH, url);
+const baseUrl = provider.getUrl(GITHUB_USER, GITHUB_REPO, GITHUB_BRANCH, '');
 
-// Purge cache to get latest version
-const purgeUrl = `https://purge.jsdelivr.net/gh/${GITHUB_USER}/${GITHUB_REPO}@${GITHUB_BRANCH}/${url}`;
+// Purge cache if supported
+if (provider.purge) {
+const purgeUrl = provider.purge(GITHUB_USER, GITHUB_REPO, GITHUB_BRANCH, url);
 fetch(purgeUrl, { method: 'POST' }).catch(() => {});
-
-// Fetch the game HTML from GitHub
-const response = await fetch(gameUrl);
-
-if (!response.ok) {
-throw new Error(`Failed to load game: ${response.statusText}`);
 }
 
-let htmlContent = await response.text();
+// Fetch the game HTML
+const response = await fetch(gameUrl, {
+method: 'GET',
+cache: 'no-cache',
+headers: {
+'Cache-Control': 'no-cache'
+}
+});
 
-// Fix relative paths in the HTML to point to GitHub
-const baseUrl = `https://cdn.jsdelivr.net/gh/${GITHUB_USER}/${GITHUB_REPO}@${GITHUB_BRANCH}/`;
+if (!response.ok) {
+throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+}
 
+htmlContent = await response.text();
+console.log(`✓ Successfully loaded from ${provider.name}`);
+successProvider = provider.name;
+
+// Fix relative paths in the HTML
 // Replace relative script src paths
 htmlContent = htmlContent.replace(
 /<script([^>]*)\s+src=["'](?!http|\/\/|data:)([^"']+)["']/gi,
@@ -13566,28 +13870,108 @@ htmlContent = htmlContent.replace(
 `<img$1 src="${baseUrl}$2"`
 );
 
-// Add base tag to handle other relative URLs
+// Special handling for Unity WebGL games
+const isUnityGame = htmlContent.includes('UnityLoader') ||
+htmlContent.includes('createUnityInstance') ||
+htmlContent.includes('unityInstance');
+
+if (isUnityGame) {
+console.log('🎯 Unity WebGL game detected - applying Unity-specific fixes');
+
+// Fix Unity loader paths
+htmlContent = htmlContent.replace(
+/UnityLoader\.js/gi,
+`${baseUrl}UnityLoader.js`
+);
+
+// Fix Build folder paths
+htmlContent = htmlContent.replace(
+/"Build\//gi,
+`"${baseUrl}Build/`
+);
+
+htmlContent = htmlContent.replace(
+/'Build\//gi,
+`'${baseUrl}Build/`
+);
+
+// Ensure Unity games run with proper CORS settings
+htmlContent = htmlContent.replace(
+/<head>/i,
+`<head>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<base href="${baseUrl}">
+<script>
+// Unity-specific configurations for school wifi
+window.unityConfig = {
+dataUrl: "${baseUrl}",
+streamingAssetsUrl: "${baseUrl}StreamingAssets",
+companyName: "DefaultCompany",
+productName: "${title}"
+};
+</script>`
+);
+} else {
+// Add base tag for non-Unity games
 htmlContent = htmlContent.replace(
 /<head>/i,
 `<head><base href="${baseUrl}">`
 );
+}
 
-// Load the game HTML into the iframe
+// Ensure scripts run properly by adding error handlers
+htmlContent = htmlContent.replace(
+/<\/body>/i,
+`<script>
+// Global error handler for debugging
+window.onerror = function(msg, url, lineNo, columnNo, error) {
+console.error('Game Error:', msg, 'at', url, lineNo + ':' + columnNo);
+return false;
+};
+
+// Log when game is fully loaded
+window.addEventListener('load', function() {
+console.log('✓ Game fully loaded and ready');
+});
+</script>
+</body>`
+);
+
+break; // Success, exit the loop
+
+} catch (error) {
+console.warn(`✗ ${provider.name} failed:`, error.message);
+lastError = error;
+}
+}
+
+// Load the game or show error
+if (htmlContent) {
+console.log(`🎮 Launching game via ${successProvider}`);
 frame.srcdoc = htmlContent;
 
 // Start auto-save after content loads
 frame.onload = () => {
 startAutoSave();
+console.log('✓ Game iframe loaded successfully');
 };
 
-} catch (error) {
-console.error('Error loading game:', error);
+// Monitor iframe for errors
+frame.onerror = (e) => {
+console.error('Iframe loading error:', e);
+};
+
+} else {
+const errorMsg = lastError ? lastError.message : 'All CDN providers failed';
+console.error('❌ Failed to load game:', errorMsg);
 frame.srcdoc = `
 <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;font-family:Arial;background:#1a1a2e;color:#fff;text-align:center;padding:20px;">
 <h2 style="color:#ff6b6b;">❌ Error Loading Game</h2>
-<p style="color:#aaa;margin-top:10px;">${error.message}</p>
+<p style="color:#aaa;margin-top:10px;">All loading methods failed</p>
 <p style="color:#888;margin-top:5px;">Game: ${title}</p>
 <p style="color:#888;">File: ${url}</p>
+<p style="color:#888;margin-top:15px;font-size:14px;">Last error: ${errorMsg}</p>
+<p style="color:#aaa;margin-top:10px;font-size:13px;">This might be due to network restrictions (school wifi).<br>Try pressing * to open the debug console for more details.</p>
 <button onclick="window.parent.closeGame()" style="margin-top:20px;padding:10px 20px;background:#4a69ff;color:white;border:none;border-radius:5px;cursor:pointer;font-size:16px;">Close</button>
 </div>
 `;
