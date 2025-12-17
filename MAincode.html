@@ -13529,12 +13529,8 @@ frame.srcdoc = '<div style="display:flex;align-items:center;justify-content:cent
 container.style.display = 'block';
 
 try {
-// Construct GitHub URL using jsDelivr CDN
-const gameUrl = `https://cdn.jsdelivr.net/gh/${GITHUB_USER}/${GITHUB_REPO}@${GITHUB_BRANCH}/${url}`;
-
-// Purge cache to get latest version
-const purgeUrl = `https://purge.jsdelivr.net/gh/${GITHUB_USER}/${GITHUB_REPO}@${GITHUB_BRANCH}/${url}`;
-fetch(purgeUrl, { method: 'POST' }).catch(() => {});
+// Construct GitHub raw content URL
+const gameUrl = `https://raw.githubusercontent.com/${GITHUB_USER}/${GITHUB_REPO}/${GITHUB_BRANCH}/${url}`;
 
 // Fetch the game HTML from GitHub
 const response = await fetch(gameUrl);
@@ -13546,7 +13542,7 @@ throw new Error(`Failed to load game: ${response.statusText}`);
 let htmlContent = await response.text();
 
 // Fix relative paths in the HTML to point to GitHub
-const baseUrl = `https://cdn.jsdelivr.net/gh/${GITHUB_USER}/${GITHUB_REPO}@${GITHUB_BRANCH}/`;
+const baseUrl = `https://raw.githubusercontent.com/${GITHUB_USER}/${GITHUB_REPO}/${GITHUB_BRANCH}/`;
 
 // Replace relative script src paths
 htmlContent = htmlContent.replace(
