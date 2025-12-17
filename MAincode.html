@@ -13515,7 +13515,7 @@ ${author}
 }
 
 // ===== PLAY GAME =====
-function playGame(url, title) {
+async function playGame(url, title) {
 currentGame = { filename: url, title: title };
 
 const container = document.getElementById('game-container');
@@ -13523,11 +13523,75 @@ const frame = document.getElementById('game-frame');
 const titleEl = document.getElementById('gameTitle');
 
 titleEl.textContent = `🎮 ${title}`;
-frame.src = url;
+
+// Show loading state
+frame.srcdoc = '<div style="display:flex;align-items:center;justify-content:center;height:100vh;font-family:Arial;background:#1a1a2e;color:#fff;"><h2>Loading game...</h2></div>';
 container.style.display = 'block';
 
-// Start auto-save
+try {
+// Construct GitHub URL using jsDelivr CDN
+const gameUrl = `https://cdn.jsdelivr.net/gh/${GITHUB_USER}/${GITHUB_REPO}@${GITHUB_BRANCH}/${url}`;
+
+// Purge cache to get latest version
+const purgeUrl = `https://purge.jsdelivr.net/gh/${GITHUB_USER}/${GITHUB_REPO}@${GITHUB_BRANCH}/${url}`;
+fetch(purgeUrl, { method: 'POST' }).catch(() => {});
+
+// Fetch the game HTML from GitHub
+const response = await fetch(gameUrl);
+
+if (!response.ok) {
+throw new Error(`Failed to load game: ${response.statusText}`);
+}
+
+let htmlContent = await response.text();
+
+// Fix relative paths in the HTML to point to GitHub
+const baseUrl = `https://cdn.jsdelivr.net/gh/${GITHUB_USER}/${GITHUB_REPO}@${GITHUB_BRANCH}/`;
+
+// Replace relative script src paths
+htmlContent = htmlContent.replace(
+/<script([^>]*)\s+src=["'](?!http|\/\/|data:)([^"']+)["']/gi,
+`<script$1 src="${baseUrl}$2"`
+);
+
+// Replace relative link href paths (for CSS)
+htmlContent = htmlContent.replace(
+/<link([^>]*)\s+href=["'](?!http|\/\/|data:)([^"']+)["']/gi,
+`<link$1 href="${baseUrl}$2"`
+);
+
+// Replace relative img src paths
+htmlContent = htmlContent.replace(
+/<img([^>]*)\s+src=["'](?!http|\/\/|data:)([^"']+)["']/gi,
+`<img$1 src="${baseUrl}$2"`
+);
+
+// Add base tag to handle other relative URLs
+htmlContent = htmlContent.replace(
+/<head>/i,
+`<head><base href="${baseUrl}">`
+);
+
+// Load the game HTML into the iframe
+frame.srcdoc = htmlContent;
+
+// Start auto-save after content loads
+frame.onload = () => {
 startAutoSave();
+};
+
+} catch (error) {
+console.error('Error loading game:', error);
+frame.srcdoc = `
+<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;font-family:Arial;background:#1a1a2e;color:#fff;text-align:center;padding:20px;">
+<h2 style="color:#ff6b6b;">❌ Error Loading Game</h2>
+<p style="color:#aaa;margin-top:10px;">${error.message}</p>
+<p style="color:#888;margin-top:5px;">Game: ${title}</p>
+<p style="color:#888;">File: ${url}</p>
+<button onclick="window.parent.closeGame()" style="margin-top:20px;padding:10px 20px;background:#4a69ff;color:white;border:none;border-radius:5px;cursor:pointer;font-size:16px;">Close</button>
+</div>
+`;
+}
 }
 
 // ===== AUTO-SAVE SYSTEM =====
