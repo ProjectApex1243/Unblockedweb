@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<link rel="icon" type="image/png" href="favicon.png">
+<style>
+body,html{
+    margin:0;
+    padding:0;
+    width:100%;
+    height:100%;
+    overflow:hidden;
+    background:#000;
+}
+.launch-btn{
+    width:100%;
+    height:100%;
+    font-size:100px;
+    background:#000;
+    color:red;
+    border:3px solid red;
+    border-radius:10px;
+    font-weight:bold;
+    cursor:pointer;
+    transition: all 0.3s ease;
+}
+.launch-btn:hover{
+    background:#1a0000;
+    transform: scale(1.02);
+}
+.launch-btn:active{
+    transform: scale(0.98);
+}
+</style>
+</head>
+<body>
+<button onclick='launchGames()' class="launch-btn">LAUNCH</button>
+<script>
+function launchGames() {
+    // Open in new window and load directly via iframe
+    const w = window.open('', '_blank');
+    if (w) {
+        w.document.open();
+        w.document.write(`
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Unblocked Games</title>
+    <style>
+        body,html{margin:0;padding:0;width:100%;height:100%;overflow:hidden}
+        iframe{width:100%;height:100%;border:none;display:block}
+    </style>
+</head>
+<body>
+    <iframe src="https://cdn.jsdelivr.net/gh/ProjectApex1243/Unblockedweb@master/MAincode.html?t=${Date.now()}"></iframe>
+</body>
+</html>
+        `);
+        w.document.close();
+    }
+}
+</script>
+</body>
+</html>

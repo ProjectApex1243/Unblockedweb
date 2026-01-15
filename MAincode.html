@@ -8137,7 +8137,7 @@ This will reset all customizations including colors, backgrounds, and theme sett
 </div>
 </div>
 <div class="game-frame-container">
-<iframe id="game-frame" allowfullscreen=""></iframe>
+<iframe id="game-frame" allowfullscreen="" sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-pointer-lock allow-modals"></iframe>
 <div class="fullscreen-hint" id="fullscreenHint">
 Press ESC to exit fullscreen
 </div>
@@ -13536,44 +13536,9 @@ const gameUrl = `https://cdn.jsdelivr.net/gh/${GITHUB_USER}/${GITHUB_REPO}@${GIT
 const purgeUrl = `https://purge.jsdelivr.net/gh/${GITHUB_USER}/${GITHUB_REPO}@${GITHUB_BRANCH}/${url}`;
 fetch(purgeUrl, { method: 'POST' }).catch(() => {});
 
-// Fetch the game HTML from GitHub
-const response = await fetch(gameUrl);
-
-if (!response.ok) {
-throw new Error(`Failed to load game: ${response.statusText}`);
-}
-
-let htmlContent = await response.text();
-
-// Fix relative paths in the HTML to point to GitHub
-const baseUrl = `https://cdn.jsdelivr.net/gh/${GITHUB_USER}/${GITHUB_REPO}@${GITHUB_BRANCH}/`;
-
-// Replace relative script src paths
-htmlContent = htmlContent.replace(
-/<script([^>]*)\s+src=["'](?!http|\/\/|data:)([^"']+)["']/gi,
-`<script$1 src="${baseUrl}$2"`
-);
-
-// Replace relative link href paths (for CSS)
-htmlContent = htmlContent.replace(
-/<link([^>]*)\s+href=["'](?!http|\/\/|data:)([^"']+)["']/gi,
-`<link$1 href="${baseUrl}$2"`
-);
-
-// Replace relative img src paths
-htmlContent = htmlContent.replace(
-/<img([^>]*)\s+src=["'](?!http|\/\/|data:)([^"']+)["']/gi,
-`<img$1 src="${baseUrl}$2"`
-);
-
-// Add base tag to handle other relative URLs
-htmlContent = htmlContent.replace(
-/<head>/i,
-`<head><base href="${baseUrl}">`
-);
-
-// Load the game HTML into the iframe
-frame.srcdoc = htmlContent;
+// Load game directly from CDN URL instead of using srcdoc
+// This preserves the correct origin context and allows games to load their resources
+frame.src = gameUrl;
 
 // Start auto-save after content loads
 frame.onload = () => {

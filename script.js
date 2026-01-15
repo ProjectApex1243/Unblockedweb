@@ -4796,66 +4796,62 @@ function loadImageWithFallback(imgElement, coverFile, gameName) {
 
 async function loadGameWithFallback(filename, title) {
     console.log('loadGame called with:', filename, title);
-    
+
     const loader = document.getElementById('game-loader');
     const container = document.getElementById('game-container');
     const frame = document.getElementById('game-frame');
     const gameTitle = document.getElementById('currentGameTitle');
-    
+
     // Show loading
     if (gameTitle) gameTitle.textContent = title;
     if (loader) loader.style.display = 'flex';
     if (container) container.style.display = 'none';
-    
+
     // Get all possible URLs
     const urls = CDN_CONFIG.getAllContentURLs(filename);
-    
-    let htmlContent = null;
+
     let successUrl = null;
-    
-    // Try each CDN
+
+    // Try each CDN until one works
     for (const url of urls) {
         try {
             console.log(`Trying to load game from: ${url}`);
-            const response = await fetch(url);
-            
+            const response = await fetch(url, { method: 'HEAD' });
+
             if (response.ok) {
-                htmlContent = await response.text();
                 successUrl = url;
-                console.log(`✓ Game loaded from: ${url}`);
+                console.log(`✓ Game available at: ${url}`);
                 break;
             }
         } catch (e) {
-            console.warn(`✗ Failed to load from: ${url}`);
+            console.warn(`✗ Failed to reach: ${url}`);
             continue;
         }
     }
-    
-    if (!htmlContent) {
+
+    if (!successUrl) {
         // All sources failed
         if (loader) loader.style.display = 'none';
         alert(`Unable to load "${title}". Your network may be blocking game content.\n\nTry:\n• Using mobile data\n• A different network\n• Asking IT to unblock cdn.jsdelivr.net`);
         return;
     }
-    
-    // Create blob and load
-    const blob = new Blob([htmlContent], { type: 'text/html' });
-    const blobUrl = URL.createObjectURL(blob);
-    
+
+    // Load game directly from CDN URL
     frame.onload = function() {
         console.log('Game loaded successfully');
         if (loader) loader.style.display = 'none';
         if (container) container.style.display = 'block';
     };
-    
+
     frame.onerror = function(e) {
         console.error('Frame error:', e);
         if (loader) loader.style.display = 'none';
         if (container) container.style.display = 'block';
     };
-    
-    frame.src = blobUrl;
-    
+
+    // Load directly from CDN URL instead of blob
+    frame.src = successUrl;
+
     // Fallback timeout
     setTimeout(function() {
         if (loader && loader.style.display !== 'none') {
