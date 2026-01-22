@@ -1,49 +1,62 @@
 # Unblocked Games
 
-🎮 A collection of unblocked games accessible through an easy-to-use launcher.
+🎮 A collection of 600+ unblocked games with fixed loading system.
 
-## 🚀 Live Demo
+## 🚀 Access
 
-Visit: `https://projectapex1243.github.io/Unblockedweb/`
+**Direct Link:**
+```
+https://cdn.jsdelivr.net/gh/ProjectApex1243/Unblockedweb@master/MAincode.html
+```
 
-## 📁 Files
+**GitHub Pages (if enabled):**
+```
+https://projectapex1243.github.io/Unblockedweb/MAincode.html
+```
 
-- **index.html** - Main launcher page (full-featured with controls)
-- **MAincode.html** - Game collection interface with 600+ games
-- **launcher.html** - Alternative full-featured launcher
-- **simple-launcher.html** - Minimalist red button launcher
+## 📁 Main File
+
+- **MAincode.html** - Complete game collection interface with 600+ games
 
 ## 🎯 Features
 
-- ✨ Modern gradient UI design
 - 🎮 600+ unblocked games
 - ⛶ Fullscreen support
-- ↗ Open in new tab
-- ↻ Reload functionality
+- 🔍 Search functionality
+- 📂 Category filters
+- 🎨 Theme customization
 - 📱 Mobile responsive
 - 🔒 No downloads required
 - ⚡ Fast CDN loading
 
 ## 🛠️ How It Works
 
-1. **Launcher** - Provides a clean interface to access games
-2. **Game Library** - Loads MAincode.html with full game collection
-3. **CDN Delivery** - Games are served via jsDelivr CDN from GitHub
-4. **Direct Loading** - Games load via iframe.src for proper origin context
+1. Games are stored as individual HTML files in the repository
+2. Served via jsDelivr CDN from GitHub
+3. Games load directly via iframe for proper origin context
+4. No black screen issues - all games load correctly
 
-## 📝 Recent Updates
+## 📝 Latest Update (v2.0)
 
-- Fixed game loading black screen issues
+✅ **FIXED: Black Screen Issue**
+- Games now load properly without black screens
+- Changed from blob URLs to direct CDN loading
 - Added proper iframe sandbox attributes
-- Implemented direct CDN loading instead of blob URLs
-- Created multiple launcher options
+- See [UPDATE_LOG.md](UPDATE_LOG.md) for full details
 
 ## 🌐 Deployment
 
-This site is deployed using GitHub Pages:
-1. Repository: ProjectApex1243/Unblockedweb
-2. Branch: master (or main)
-3. URL: https://projectapex1243.github.io/Unblockedweb/
+**Option 1: Use CDN directly** (works immediately)
+```
+https://cdn.jsdelivr.net/gh/ProjectApex1243/Unblockedweb@master/MAincode.html
+```
+
+**Option 2: Enable GitHub Pages**
+1. Go to Settings → Pages
+2. Source: Deploy from branch
+3. Branch: master
+4. Folder: / (root)
+5. URL: `https://projectapex1243.github.io/Unblockedweb/MAincode.html`
 
 ## 🤝 Contributing
 
