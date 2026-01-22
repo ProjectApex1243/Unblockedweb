@@ -13524,8 +13524,9 @@ const titleEl = document.getElementById('gameTitle');
 
 titleEl.textContent = `🎮 ${title}`;
 
-// Show loading state
-frame.srcdoc = '<div style="display:flex;align-items:center;justify-content:center;height:100vh;font-family:Arial;background:#1a1a2e;color:#fff;"><h2>Loading game...</h2></div>';
+// Clear iframe and show container
+frame.src = 'about:blank';
+frame.srcdoc = '';
 container.style.display = 'block';
 
 try {
@@ -13536,7 +13537,9 @@ const gameUrl = `https://cdn.jsdelivr.net/gh/${GITHUB_USER}/${GITHUB_REPO}@${GIT
 const purgeUrl = `https://purge.jsdelivr.net/gh/${GITHUB_USER}/${GITHUB_REPO}@${GITHUB_BRANCH}/${url}`;
 fetch(purgeUrl, { method: 'POST' }).catch(() => {});
 
-// Load game directly from CDN URL instead of using srcdoc
+// Small delay to ensure iframe is ready, then load game
+setTimeout(() => {
+// Load game directly from CDN URL
 // This preserves the correct origin context and allows games to load their resources
 frame.src = gameUrl;
 
@@ -13544,6 +13547,7 @@ frame.src = gameUrl;
 frame.onload = () => {
 startAutoSave();
 };
+}, 100);
 
 } catch (error) {
 console.error('Error loading game:', error);
