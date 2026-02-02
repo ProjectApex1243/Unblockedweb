@@ -1,0 +1,11 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Game Launcher</title>
+<style>body,html{margin:0;padding:0;width:100%;height:100%;overflow:hidden}</style>
+</head>
+<body>
+<button onclick='fetch("https://raw.githubusercontent.com/ProjectApex1243/Unblockedweb/refs/heads/master/MAincode.html?t="+Date.now()).then(r=>r.text()).then(t=>{document.open();document.write(t);document.close()}).catch(err=>{document.body.innerHTML="<div style=\"display:flex;align-items:center;justify-content:center;height:100vh;font-family:Arial;background:#000;color:#fff;\"><h2>Error: "+err.message+"</h2></div>"})' style="width:100%;height:100%;font-size:100px;background:#000;color:red;border:3px solid red;border-radius:10px;font-weight:bold;cursor:pointer">LAUNCH</button>
+</body>
+</html>
